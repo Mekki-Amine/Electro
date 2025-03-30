@@ -15,7 +15,7 @@ const HomePage = () => {
           </ul>
         </nav>
       </header>
-      <main className="flex-grow p-4">
+      <main className="flex-grow p-4">  
         <section id="home" className="my-8">
           <h2 className="text-2xl font-semibold text-white">Votre solution rapide pour tous vos appareils.</h2>
           <div className="my-4">

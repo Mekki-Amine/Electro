@@ -2,16 +2,18 @@ package org.example.serviceelectro.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter
@@ -19,7 +21,8 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Utilisateur  implements Serializable , UserDetails {
+@EntityListeners(AuditingEntityListener.class)
+public class Utilisateur implements Serializable, UserDetails {
 
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,29 +32,16 @@ public class Utilisateur  implements Serializable , UserDetails {
         private String email;
         private String role ;
 
-        @OneToMany(mappedBy = "utilisateur")
+        @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
         private List<Publication> publications = new ArrayList<>();
 
+        @CreatedDate
+        @Column(nullable = false, updatable = false)
+        private LocalDateTime createdAt;
 
-        public Utilisateur() {
-        }
-
-        public Utilisateur(Long id, String username, String password, String email, String role , List<Publication> publications) {
-                this.id = id;
-                this.username = username;
-                this.password = password;
-                this.email = email;
-                this.role = role;
-                this.publications = publications;
-        }
-
-        public Long getId() {
-                return id;
-        }
-
-        public void setId(Long id) {
-                this.id = id;
-        }
+        @LastModifiedDate
+        @Column(nullable = false)
+        private LocalDateTime updatedAt;
 
         public String getUsername() {
                 return email;
@@ -59,7 +49,7 @@ public class Utilisateur  implements Serializable , UserDetails {
 
         @Override
         public boolean isAccountNonExpired() {
-                return true ;
+                return true;
         }
 
         @Override
@@ -69,7 +59,7 @@ public class Utilisateur  implements Serializable , UserDetails {
 
         @Override
         public boolean isCredentialsNonExpired() {
-                return true ;
+                return true;
         }
 
         @Override
@@ -77,41 +67,16 @@ public class Utilisateur  implements Serializable , UserDetails {
                 return true;
         }
 
-        public void setUsername(String username) {
-                this.username = username;
-        }
-
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
-                return List.of(new SimpleGrantedAuthority(role));
+                return List.of(new SimpleGrantedAuthority("ROLE_" + (role != null ? role : "USER")));
         }
 
-        public String getPassword() {
-                return password;
+        public String getRole() {
+                return role;
         }
 
-        public void setPassword(String password) {
-                this.password = password;
-        }
-
-        public String getEmail() {
-                return email;
-        }
-
-        public void setEmail(String email) {
-                this.email = email;
-        }
-
-
-        public void setRoles(String role) {
+        public void setRole(String role) {
                 this.role = role;
-        }
-
-        public List<Publication> getPublications() {
-                return publications;
-        }
-
-        public void setPublications(List<Publication> publications) {
-                this.publications = publications;
         }
 }

@@ -9,4 +9,6 @@ public interface Ipub {
     public List<Publication> getAllPublications() ;
 
     public Publication savePublication(Publication publication) ;
+
+    public Publication getPublicationId(int id) ;
 }

@@ -1,10 +1,14 @@
 package org.example.serviceelectro.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.antlr.v4.runtime.misc.NotNull;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -13,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-
+@EntityListeners(AuditingEntityListener.class)
 public class Publication implements Serializable {
 
     @Id
@@ -30,61 +34,39 @@ public class Publication implements Serializable {
     @NotNull
     private String status;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean verified = false;
+
+    @Column(nullable = true)
+    private Long verifiedBy;
+
+    @Column(nullable = true)
+    private LocalDateTime verifiedAt;
+
+    @Column(length = 500)
+    private String fileUrl;
+
+    @Column(length = 255)
+    private String fileName;
+
+    @Column(length = 100)
+    private String fileType;
+
+    @Column
+    private Long fileSize;
+
     @ManyToOne
     private Utilisateur utilisateur;
 
-    @OneToMany(mappedBy = "publication")
+    @OneToMany(mappedBy = "publication", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments;
 
-    public Publication() {
-    }
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    public Publication(Long id, String title, String description, String type, Double price, String status, Utilisateur utilisateur, List<Comment> comments) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.type = type;
-        this.price = price;
-        this.status = status;
-        this.utilisateur = utilisateur;
-        this.comments = comments;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-    public String getTitle() {
-        return title;
-    }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public String getType() {
-        return type;
-    }
-    public void setType(String type) {
-        this.type = type;
-    }
-    public Double getPrice() {
-        return price;
-    }
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-    public String getStatus() {
-        return status;
-    }
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    @LastModifiedDate
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
 }

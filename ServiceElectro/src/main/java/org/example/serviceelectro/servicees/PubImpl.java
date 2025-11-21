@@ -4,21 +4,114 @@ import org.example.serviceelectro.entities.Publication;
 import org.example.serviceelectro.repository.PublicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
+@Transactional
 public class PubImpl implements Ipub {
     @Autowired
     private PublicationRepository publicationRepository;
 
+    @Autowired(required = false)
+    private AutoVerificationService autoVerificationService;
+
+    @Autowired(required = false)
+    private FileStorageService fileStorageService;
+
     @Override
     public List<Publication> getAllPublications() {
+        // Retourne uniquement les publications vérifiées pour le public
+        return publicationRepository.findByVerifiedTrue();
+    }
+
+    public List<Publication> getAllPublicationsIncludingUnverified() {
+        // Retourne toutes les publications (pour les admins)
         return publicationRepository.findAll();
     }
 
     @Override
     public Publication savePublication(Publication publication) {
+        if (publication.getUtilisateur() == null) {
+            throw new IllegalArgumentException("L'utilisateur est requis pour créer une publication");
+        }
+        // Par défaut, les nouvelles publications ne sont pas vérifiées
+        if (publication.getVerified() == null) {
+            publication.setVerified(false);
+        }
+        
+        Publication savedPublication = publicationRepository.save(publication);
+        
+        // Tentative de vérification automatique si le service est disponible
+        if (autoVerificationService != null && !savedPublication.getVerified()) {
+            try {
+                autoVerificationService.autoVerifyPublication(savedPublication);
+                // Recharger la publication après vérification automatique
+                savedPublication = publicationRepository.findById(savedPublication.getId())
+                        .orElse(savedPublication);
+            } catch (Exception e) {
+                // Log l'erreur mais ne bloque pas la création de la publication
+                System.err.println("Erreur lors de la vérification automatique: " + e.getMessage());
+            }
+        }
+        
+        return savedPublication;
+    }
+
+    public Optional<Publication> findById(Long id) {
+        return publicationRepository.findById(id);
+    }
+
+    public void deletePublication(Long id) {
+        Optional<Publication> publicationOpt = publicationRepository.findById(id);
+        if (publicationOpt.isPresent()) {
+            Publication publication = publicationOpt.get();
+            // Supprimer le fichier associé s'il existe
+            if (fileStorageService != null && publication.getFileName() != null) {
+                try {
+                    fileStorageService.deleteFile(publication.getFileName());
+                } catch (Exception e) {
+                    // Log l'erreur mais continue la suppression de la publication
+                    System.err.println("Erreur lors de la suppression du fichier: " + e.getMessage());
+                }
+            }
+        }
+        publicationRepository.deleteById(id);
+    }
+
+    public List<Publication> findByUtilisateurId(Long utilisateurId) {
+        return publicationRepository.findByUtilisateurId(utilisateurId);
+    }
+
+    public List<Publication> findUnverifiedPublications() {
+        return publicationRepository.findByVerifiedFalse();
+    }
+
+    public Publication verifyPublication(Long publicationId, Long adminId) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        if (publication.getVerified()) {
+            throw new IllegalArgumentException("Cette publication est déjà vérifiée");
+        }
+
+        publication.setVerified(true);
+        publication.setVerifiedBy(adminId);
+        publication.setVerifiedAt(LocalDateTime.now());
+
+        return publicationRepository.save(publication);
+    }
+
+    public Publication unverifyPublication(Long publicationId) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        publication.setVerified(false);
+        publication.setVerifiedBy(null);
+        publication.setVerifiedAt(null);
 
         return publicationRepository.save(publication);
     }

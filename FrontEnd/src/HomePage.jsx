@@ -1,139 +1,278 @@
-
-import React from "react";
-import { Navbar } from "./shared/nav";
+import React, { useState } from "react";
+import { Button } from "./components/Button";
+import { Input } from "./components/Input";
+import { Textarea } from "./components/Textarea";
+import { Card } from "./components/Card";
 
 const HomePage = () => {
-  return (
-    <div className="font-sans text-black bg-yellow-100 min-h-screen flex flex-col">
-      <header className="bg-yellow-300 p-4 flex justify-center">
-        <h1 className="text-3xl font-bold text-black">Bienvenue chez Fixer</h1>
-      </header>
-  <Navbar />
-      <main className="flex-grow p-4">
-        <section id="home" className="my-8">
-          <h2 className="text-2xl font-semibold text-black">
-            Votre solution rapide pour tous vos appareils.
-          </h2>
-          <div className="my-4">
-            <h3 className="text-xl font-semibold text-black">
-              Nos services
-            </h3>
-            <div className="my-2">
-              <h4 className="font-medium text-black">
-                Réparation d'électroménagers
-              </h4>
-              <p>
-                Nous sommes spécialisés dans la réparation de tous types
-                d'appareils électroménagers...
-              </p>
-            </div>
-            <div className="my-2">
-              <h4 className="font-medium text-black">
-                Installation et maintenance
-              </h4>
-              <p>
-                Nous assurons également l'installation et la maintenance de vos
-                appareils électroménagers...
-              </p>
-            </div>
-            <div className="my-2">
-              <h4 className="font-medium text-black">Pièces de rechange</h4>
-              <p>
-                Nous fournissons des pièces de rechange d'origine pour vos
-                appareils électroménagers...
-              </p>
-            </div>
-            <div className="my-2">
-              <h4 className="font-medium text-black">Service clientèle</h4>
-              <p>Notre engagement envers nos clients est notre priorité...</p>
-            </div>
-            <div className="my-2">
-              <h4 className="font-medium text-black">
-                Conseils d'entretien
-              </h4>
-              <p>
-                Profitez de nos conseils d'entretien pour optimiser la durée de
-                vie de vos appareils...
-              </p>
-            </div>
-          </div>
-        </section>
-        <section id="about" className="my-8">
-          <h3 className="text-xl font-semibold text-black">
-            Pourquoi nous choisir ?
-          </h3>
-          <ul className="list-disc list-inside text-black">
-            <li>Expertise éprouvée</li>
-            <li>Service rapide</li>
-            <li>Transparence et confiance</li>
-            <li>Satisfaction garantie</li>
-            <li>Disponibilité locale</li>
-          </ul>
-        </section>
-        <section id="quote" className="my-8">
-          <h3 className="text-xl font-semibold text-black">
-            Demandez un devis gratuit
-          </h3>
-          <form className="flex flex-col items-center">
-            <label className="my-2">Nom</label>
-            <input
-              type="text"
-              name="name"
-              className="border p-2 rounded bg-yellow-200 text-black"
-            />
-            <label className="my-2">E-mail</label>
-            <input
-              type="email"
-              name="email"
-              className="border p-2 rounded bg-yellow-200 text-black"
-            />
-            <label className="my-2">Numéro de téléphone</label>
-            <input
-              type="tel"
-              name="phone"
-              className="border p-2 rounded bg-yellow-200 text-black"
-            />
-            <label className="my-2">Commentaire</label>
-            <textarea
-              name="comment"
-              className="border p-2 rounded bg-yellow-200 text-black"
-            ></textarea>
-            <button
-              type="submit"
-              className="bg-yellow-300 text-black p-2 mt-4 rounded hover:bg-yellow-400 transition duration-300"
-            >
-              Envoyer
-            </button>
-          </form>
-          <p className="mt-4 text-black">
-            Le prix de nos devis comprend une prestation de 1 heure de
-            réparation...
-          </p>
-        </section>
-        <section id="reviews" className="my-8">
-          <h3 className="text-xl font-semibold text-black">Avis clients</h3>
-          <div className="my-2">
-            <p>
-              ⭐⭐⭐⭐ Très professionnel, diagnostic rapide et réparation au
-              top. Merci !
-            </p>
-            <p>Réponse : Myrepartout</p>
-          </div>
-          <div className="my-2">
-            <p>
-              ⭐⭐⭐ Service rapide et efficace ! Mon mixeur est comme neuf. Je
-              recommande vivement !
-            </p>
-            <p>Réponse : Myrepartout</p>
-          </div>
-          <div className="my-2">
-            <p>
-              ⭐⭐⭐⭐ Intervention rapide et sans surprise. Mon robot culinaire
-              est sauvé !
-            </p>
-            <p>Réponse : Myrepartout</p>
-          </div>
-        </section>
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    comment: "",
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name.trim()) errors.name = "Le nom est requis";
+    if (!formData.email.trim()) {
+      errors.email = "L'email est requis";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "L'email n'est pas valide";
+    }
+    if (!formData.phone.trim()) {
+      errors.phone = "Le numéro de téléphone est requis";
+    } else if (!/^[0-9+\s-]+$/.test(formData.phone)) {
+      errors.phone = "Le numéro de téléphone n'est pas valide";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    // Simuler l'envoi du formulaire
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setSubmitSuccess(true);
+      setFormData({ name: "", email: "", phone: "", comment: "" });
+      setTimeout(() => setSubmitSuccess(false), 5000);
+    }, 1500);
+  };
+
+  return (
+    <div className="font-sans text-gray-800 bg-gradient-to-br from-yellow-50 to-yellow-100 min-h-screen">
+      <header className="bg-gradient-to-r from-yellow-400 to-yellow-500 shadow-md">
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+            Bienvenue chez Fixer
+          </h1>
+          <p className="text-lg text-gray-800">
+            Votre solution rapide pour tous vos appareils
+          </p>
+        </div>
+      </header>
+      <main className="container mx-auto px-4 py-8">
+        <section id="home" className="my-12">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Votre solution rapide pour tous vos appareils
+            </h2>
+            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+              Expertise professionnelle, service rapide et satisfaction garantie
+              pour tous vos besoins en réparation d'électroménagers
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            <Card hover className="text-center">
+              <div className="text-4xl mb-4">🔧</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Réparation d'électroménagers
+              </h3>
+              <p className="text-gray-600">
+                Nous sommes spécialisés dans la réparation de tous types
+                d'appareils électroménagers avec une expertise éprouvée et des
+                pièces de qualité.
+              </p>
+            </Card>
+
+            <Card hover className="text-center">
+              <div className="text-4xl mb-4">⚙️</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Installation et maintenance
+              </h3>
+              <p className="text-gray-600">
+                Nous assurons l'installation et la maintenance de vos appareils
+                électroménagers pour garantir leur performance optimale.
+              </p>
+            </Card>
+
+            <Card hover className="text-center">
+              <div className="text-4xl mb-4">🔩</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Pièces de rechange
+              </h3>
+              <p className="text-gray-600">
+                Nous fournissons des pièces de rechange d'origine pour vos
+                appareils électroménagers, garantissant compatibilité et
+                durabilité.
+              </p>
+            </Card>
+
+            <Card hover className="text-center">
+              <div className="text-4xl mb-4">💬</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Service clientèle
+              </h3>
+              <p className="text-gray-600">
+                Notre engagement envers nos clients est notre priorité. Service
+                réactif et professionnel à votre écoute.
+              </p>
+            </Card>
+
+            <Card hover className="text-center">
+              <div className="text-4xl mb-4">📚</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Conseils d'entretien
+              </h3>
+              <p className="text-gray-600">
+                Profitez de nos conseils d'entretien pour optimiser la durée de
+                vie de vos appareils et éviter les pannes.
+              </p>
+            </Card>
+          </div>
+        </section>
+        <section id="about" className="my-12">
+          <Card className="bg-gradient-to-r from-yellow-400 to-yellow-500">
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">
+              Pourquoi nous choisir ?
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                "Expertise éprouvée",
+                "Service rapide",
+                "Transparence et confiance",
+                "Satisfaction garantie",
+                "Disponibilité locale",
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center space-x-3 bg-white bg-opacity-90 p-4 rounded-lg"
+                >
+                  <span className="text-yellow-500 text-xl">✓</span>
+                  <span className="font-semibold text-gray-900">{item}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </section>
+        <section id="quote" className="my-12">
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 text-center">
+                Demandez un devis gratuit
+              </h3>
+              {submitSuccess && (
+                <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                  ✓ Votre demande a été envoyée avec succès ! Nous vous
+                  contacterons bientôt.
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
+                  label="Nom"
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  error={formErrors.name}
+                  required
+                />
+                <Input
+                  label="E-mail"
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={formErrors.email}
+                  required
+                />
+                <Input
+                  label="Numéro de téléphone"
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  error={formErrors.phone}
+                  required
+                />
+                <Textarea
+                  label="Commentaire"
+                  id="comment"
+                  name="comment"
+                  value={formData.comment}
+                  onChange={handleChange}
+                  error={formErrors.comment}
+                  rows={5}
+                />
+                <div className="flex justify-center">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full md:w-auto"
+                  >
+                    {isSubmitting ? "Envoi en cours..." : "Envoyer"}
+                  </Button>
+                </div>
+              </form>
+              <p className="mt-6 text-sm text-gray-600 text-center">
+                Le prix de nos devis comprend une prestation de 1 heure de
+                réparation. Devis gratuit et sans engagement.
+              </p>
+            </Card>
+          </div>
+        </section>
+        <section id="reviews" className="my-12">
+          <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+            Avis clients
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card hover>
+              <div className="flex items-center mb-3">
+                <div className="text-yellow-400 text-xl">⭐⭐⭐⭐</div>
+              </div>
+              <p className="text-gray-700 mb-3 italic">
+                "Très professionnel, diagnostic rapide et réparation au top.
+                Merci !"
+              </p>
+              <p className="text-sm text-gray-500 font-semibold">
+                - Myrepartout
+              </p>
+            </Card>
+            <Card hover>
+              <div className="flex items-center mb-3">
+                <div className="text-yellow-400 text-xl">⭐⭐⭐</div>
+              </div>
+              <p className="text-gray-700 mb-3 italic">
+                "Service rapide et efficace ! Mon mixeur est comme neuf. Je
+                recommande vivement !"
+              </p>
+              <p className="text-sm text-gray-500 font-semibold">
+                - Myrepartout
+              </p>
+            </Card>
+            <Card hover>
+              <div className="flex items-center mb-3">
+                <div className="text-yellow-400 text-xl">⭐⭐⭐⭐</div>
+              </div>
+              <p className="text-gray-700 mb-3 italic">
+                "Intervention rapide et sans surprise. Mon robot culinaire est
+                sauvé !"
+              </p>
+              <p className="text-sm text-gray-500 font-semibold">
+                - Myrepartout
+              </p>
+            </Card>
+          </div>
+        </section>
       </main>
     </div>
   );

@@ -30,19 +30,20 @@ public class Utilisateur implements Serializable, UserDetails {
         private String username;
         private String password;
         private String email;
-        private String role ;
+        private String role;
 
         @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
         private List<Publication> publications = new ArrayList<>();
 
         @CreatedDate
-        @Column(nullable = false, updatable = false)
+        @Column(nullable = true, updatable = false)  // Changed to nullable = true
         private LocalDateTime createdAt;
 
         @LastModifiedDate
-        @Column(nullable = false)
+        @Column(nullable = true)  // Changed to nullable = true
         private LocalDateTime updatedAt;
 
+        @Override
         public String getUsername() {
                 return email;
         }
@@ -70,32 +71,5 @@ public class Utilisateur implements Serializable, UserDetails {
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
                 return List.of(new SimpleGrantedAuthority("ROLE_" + (role != null ? role : "USER")));
-        }
-
-        public String getRole() {
-                return role;
-        }
-
-        public void setRole(String role) {
-                this.role = role;
-        }
-
-        public Long getId() {
-                return id;
-        }
-        public void setId(Long id) {
-                this.id = id;
-        }
-
-        public String getEmail() {
-                return email;
-        }
-
-        public String getPassword() {
-                return password;
-        }
-
-        public void setPassword(String password) {
-                this.password = password;
         }
 }

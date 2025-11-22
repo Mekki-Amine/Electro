@@ -54,7 +54,9 @@ function Pup() {
     const payload = {
       title: newPublication.title,
       description: newPublication.description,
+      type: newPublication.type,
       price: newPublication.price,
+      utilisateurId: 1
     };
 
     axios

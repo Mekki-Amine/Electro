@@ -40,7 +40,7 @@ public class PublicationMapper {
         publication.setDescription(dto.getDescription());
         publication.setType(dto.getType());
         publication.setPrice(dto.getPrice());
-        publication.setStatus(dto.getStatus());
+        publication.setStatus(dto.getStatus() != null ? dto.getStatus() : "DISPONIBLE");
         publication.setVerified(dto.getVerified() != null ? dto.getVerified() : false);
         publication.setVerifiedBy(dto.getVerifiedBy());
         publication.setVerifiedAt(dto.getVerifiedAt());

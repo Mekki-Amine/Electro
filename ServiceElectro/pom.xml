@@ -113,6 +113,12 @@
 
     </dependencies>
 
+        <!-- Flyway for database migrations -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
     <build>
         <plugins>
             <plugin>

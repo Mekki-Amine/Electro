@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -64,51 +63,34 @@ public class PubController {
         return new ResponseEntity<>(publicationMapper.toDTO(savedPublication), HttpStatus.CREATED);
     }
 
-    @PostMapping(value = "/with-file", consumes = {"multipart/form-data"})
-    public ResponseEntity<PublicationDTO> savePublicationWithFile(
+    @PostMapping(value = "/create", consumes = {"application/x-www-form-urlencoded", "multipart/form-data"})
+    public ResponseEntity<PublicationDTO> createPublication(
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("type") String type,
             @RequestParam("price") Double price,
-            @RequestParam("status") String status,
-            @RequestParam("utilisateurId") Long utilisateurId,
-            @RequestParam(value = "file", required = false) MultipartFile file) {
+            @RequestParam("utilisateurId") Long utilisateurId) {
         
+        // Vérifier que l'utilisateur existe
         Utilisateur utilisateur = userService.findById(utilisateurId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
 
+        // Créer le DTO avec seulement les champs essentiels
         PublicationDTO publicationDTO = new PublicationDTO();
         publicationDTO.setTitle(title);
         publicationDTO.setDescription(description);
         publicationDTO.setType(type);
         publicationDTO.setPrice(price);
-        publicationDTO.setStatus(status);
+        publicationDTO.setStatus("DISPONIBLE"); // Valeur par défaut
         publicationDTO.setUtilisateurId(utilisateurId);
 
-
+        // Convertir en entité et sauvegarder dans MySQL
         Publication publication = publicationMapper.toEntity(publicationDTO, utilisateur);
-
-        // Gérer l'upload du fichier si présent
-
         Publication savedPublication = publicationService.savePublication(publication);
+        
         return new ResponseEntity<>(publicationMapper.toDTO(savedPublication), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}/file")
-    public ResponseEntity<PublicationDTO> updatePublicationFile(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
-        Publication publication = publicationService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
-
-        // Supprimer l'ancien fichier s'il existe
-
-
-        // Upload du nouveau fichier
-        Publication updatedPublication = publicationService.savePublication(publication);
-
-        return ResponseEntity.ok(publicationMapper.toDTO(updatedPublication));
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePublication(@PathVariable Long id) {

@@ -30,7 +30,6 @@ public class PublicationDTO {
     @Positive(message = "Le prix doit être positif")
     private Double price;
 
-    @NotBlank(message = "Le statut est requis")
     private String status;
 
     private Boolean verified;

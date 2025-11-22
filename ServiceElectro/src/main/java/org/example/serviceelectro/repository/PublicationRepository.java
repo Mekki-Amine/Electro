@@ -8,11 +8,19 @@ import java.util.List;
 
 @Repository
 public interface PublicationRepository extends JpaRepository<Publication, Long> {
+
+    // WRONG - Remove this:
+    // Publication getPublicationId(int id);
+
+    // CORRECT - Use one of these instead:
+    // Option 1: Already provided by JpaRepository
+    // Optional<Publication> findById(Long id);
+
+    // Option 2: If you need a custom method with int parameter:
+    Publication findByIdEquals(Long id);
+
+    // Other methods
     List<Publication> findByUtilisateurId(Long utilisateurId);
-    List<Publication> findByStatus(String status);
-    List<Publication> findByType(String type);
     List<Publication> findByVerifiedTrue();
     List<Publication> findByVerifiedFalse();
-    List<Publication> findByVerifiedAndStatus(Boolean verified, String status);
-    public Publication getPublicationId(int id) ;
 }

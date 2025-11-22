@@ -25,7 +25,7 @@ function Pup() {
   const fetchPublications = () => {
     setLoading(true);
     axios
-      .get("http://localhost:9090/api/pub")
+      .get("/api/pub")
       .then((response) => {
         setPublications(response.data);
         setError(null);
@@ -50,8 +50,15 @@ function Pup() {
     setIsSubmitting(true);
     setSubmitSuccess(false);
 
+    // send only title, description and price to backend
+    const payload = {
+      title: newPublication.title,
+      description: newPublication.description,
+      price: newPublication.price,
+    };
+
     axios
-      .post("http://localhost:9090/api/pub", newPublication)
+      .post("/api/pub", payload)
       .then((response) => {
         setPublications([...publications, response.data]);
         setNewPublication({

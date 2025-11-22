@@ -79,4 +79,23 @@ public class Utilisateur implements Serializable, UserDetails {
         public void setRole(String role) {
                 this.role = role;
         }
+
+        public Long getId() {
+                return id;
+        }
+        public void setId(Long id) {
+                this.id = id;
+        }
+
+        public String getEmail() {
+                return email;
+        }
+
+        public String getPassword() {
+                return password;
+        }
+
+        public void setPassword(String password) {
+                this.password = password;
+        }
 }

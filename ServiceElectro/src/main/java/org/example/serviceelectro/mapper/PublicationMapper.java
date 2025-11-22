@@ -12,45 +12,43 @@ public class PublicationMapper {
         if (publication == null) {
             return null;
         }
-        return PublicationDTO.builder()
-                .id(publication.getId())
-                .title(publication.getTitle())
-                .description(publication.getDescription())
-                .type(publication.getType())
-                .price(publication.getPrice())
-                .status(publication.getStatus())
-                .verified(publication.getVerified())
-                .verifiedBy(publication.getVerifiedBy())
-                .verifiedAt(publication.getVerifiedAt())
-                .fileUrl(publication.getFileUrl())
-                .fileName(publication.getFileName())
-                .fileType(publication.getFileType())
-                .fileSize(publication.getFileSize())
-                .utilisateurId(publication.getUtilisateur() != null ? publication.getUtilisateur().getId() : null)
-                .build();
+        PublicationDTO dto = new PublicationDTO();
+        dto.setId(publication.getId());
+        dto.setTitle(publication.getTitle());
+        dto.setDescription(publication.getDescription());
+        dto.setType(publication.getType());
+        dto.setPrice(publication.getPrice());
+        dto.setStatus(publication.getStatus());
+        dto.setVerified(publication.getVerified());
+        dto.setVerifiedBy(publication.getVerifiedBy());
+        dto.setVerifiedAt(publication.getVerifiedAt());
+        dto.setFileUrl(publication.getFileUrl());
+        dto.setFileName(publication.getFileName());
+        dto.setFileType(publication.getFileType());
+        dto.setFileSize(publication.getFileSize());
+        dto.setUtilisateurId(publication.getUtilisateur() != null ? publication.getUtilisateur().getId() : null);
+        return dto;
     }
 
     public Publication toEntity(PublicationDTO dto, Utilisateur utilisateur) {
         if (dto == null) {
             return null;
         }
-        return Publication.builder()
-                .id(dto.getId())
-                .title(dto.getTitle())
-                .description(dto.getDescription())
-                .type(dto.getType())
-                .price(dto.getPrice())
-                .status(dto.getStatus())
-                .verified(dto.getVerified() != null ? dto.getVerified() : false)
-                .verifiedBy(dto.getVerifiedBy())
-                .verifiedAt(dto.getVerifiedAt())
-                .fileUrl(dto.getFileUrl())
-                .fileName(dto.getFileName())
-                .fileType(dto.getFileType())
-                .fileSize(dto.getFileSize())
-                .utilisateur(utilisateur)
-                .build();
+        Publication publication = new Publication();
+        publication.setId(dto.getId());
+        publication.setTitle(dto.getTitle());
+        publication.setDescription(dto.getDescription());
+        publication.setType(dto.getType());
+        publication.setPrice(dto.getPrice());
+        publication.setStatus(dto.getStatus());
+        publication.setVerified(dto.getVerified() != null ? dto.getVerified() : false);
+        publication.setVerifiedBy(dto.getVerifiedBy());
+        publication.setVerifiedAt(dto.getVerifiedAt());
+        publication.setFileUrl(dto.getFileUrl());
+        publication.setFileName(dto.getFileName());
+        publication.setFileType(dto.getFileType());
+        publication.setFileSize(dto.getFileSize());
+        publication.setUtilisateur(utilisateur);
+        return publication;
     }
 }
-
-

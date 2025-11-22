@@ -21,6 +21,40 @@ public class CommentDTO {
     private Long publicationId;
 
     private Long utilisateurId;
+
+    // Getters explicites pour assurer la compatibilité
+    public Long getPublicationId() {
+        return publicationId;
+    }
+
+    public void setPublicationId(Long publicationId) {
+        this.publicationId = publicationId;
+    }
+
+    public Long getUtilisateurId() {
+        return utilisateurId;
+    }
+
+    public void setUtilisateurId(Long utilisateurId) {
+        this.utilisateurId = utilisateurId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
 }
 
 

@@ -19,8 +19,6 @@ public class PubImpl implements Ipub {
     @Autowired(required = false)
     private AutoVerificationService autoVerificationService;
 
-    @Autowired(required = false)
-    private FileStorageService fileStorageService;
 
     @Override
     public List<Publication> getAllPublications() {
@@ -61,6 +59,11 @@ public class PubImpl implements Ipub {
         return savedPublication;
     }
 
+    @Override
+    public Publication getPublicationId(int id) {
+        return null;
+    }
+
     public Optional<Publication> findById(Long id) {
         return publicationRepository.findById(id);
     }
@@ -69,16 +72,9 @@ public class PubImpl implements Ipub {
         Optional<Publication> publicationOpt = publicationRepository.findById(id);
         if (publicationOpt.isPresent()) {
             Publication publication = publicationOpt.get();
-            // Supprimer le fichier associé s'il existe
-            if (fileStorageService != null && publication.getFileName() != null) {
-                try {
-                    fileStorageService.deleteFile(publication.getFileName());
-                } catch (Exception e) {
-                    // Log l'erreur mais continue la suppression de la publication
-                    System.err.println("Erreur lors de la suppression du fichier: " + e.getMessage());
-                }
+
             }
-        }
+
         publicationRepository.deleteById(id);
     }
 

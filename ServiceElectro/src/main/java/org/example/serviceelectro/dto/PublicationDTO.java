@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -33,7 +35,7 @@ public class PublicationDTO {
 
     private Boolean verified;
     private Long verifiedBy;
-    private java.time.LocalDateTime verifiedAt;
+    private LocalDateTime verifiedAt;
 
     private String fileUrl;
     private String fileName;
@@ -42,5 +44,3 @@ public class PublicationDTO {
 
     private Long utilisateurId;
 }
-
-

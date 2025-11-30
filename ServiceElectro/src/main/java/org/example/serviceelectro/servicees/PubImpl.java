@@ -33,15 +33,21 @@ public class PubImpl implements Ipub {
 
     @Override
     public Publication savePublication(Publication publication) {
-        if (publication.getUtilisateur() == null) {
-            throw new IllegalArgumentException("L'utilisateur est requis pour créer une publication");
-        }
+        // L'utilisateur est maintenant optionnel - les publications peuvent être créées sans utilisateur
         // Par défaut, les nouvelles publications ne sont pas vérifiées
         if (publication.getVerified() == null) {
             publication.setVerified(false);
         }
         
+        // Debug: vérifier le statut avant sauvegarde
+        System.out.println("=== SERVICE - Avant sauvegarde ===");
+        System.out.println("Statut de la publication: " + publication.getStatus());
+        
         Publication savedPublication = publicationRepository.save(publication);
+        
+        // Debug: vérifier le statut après sauvegarde
+        System.out.println("=== SERVICE - Après sauvegarde ===");
+        System.out.println("Statut sauvegardé: " + savedPublication.getStatus());
         
         // Tentative de vérification automatique si le service est disponible
         if (autoVerificationService != null && !savedPublication.getVerified()) {

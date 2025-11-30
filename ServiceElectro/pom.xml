@@ -110,14 +110,17 @@
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.12.728</version>
         </dependency>
-
-    </dependencies>
-
         <!-- Flyway for database migrations -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
+    </dependencies>
 
     <build>
         <plugins>

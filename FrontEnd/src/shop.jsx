@@ -1,17 +1,98 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Card } from "./components/Card";
+import { useAuth } from "./contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Shop = () => {
-  const [products, setProducts] = useState([]);
+  const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedPublication, setSelectedPublication] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState({
+    cardNumber: "",
+    cardHolder: "",
+    expiryDate: "",
+    cvv: "",
+  });
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Simuler le chargement des produits depuis l'API
-    // Pour l'instant, on affiche un message si aucun produit n'est disponible
-    setLoading(false);
+    fetchVerifiedPublications();
   }, []);
+
+  const fetchVerifiedPublications = async () => {
+    try {
+      setLoading(true);
+      // Récupérer uniquement les publications vérifiées (catalogue)
+      const response = await axios.get("/api/pub");
+      setPublications(response.data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching publications:", err);
+      setError("Impossible de charger le catalogue. Vérifiez que le serveur est démarré.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuyClick = (publication) => {
+    if (!isAuthenticated) {
+      alert("Vous devez être connecté pour effectuer un paiement.");
+      navigate("/login");
+      return;
+    }
+    setSelectedPublication(publication);
+    setShowPaymentModal(true);
+  };
+
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    setProcessingPayment(true);
+
+    try {
+      // Simulation de paiement - Dans un vrai système, vous utiliseriez Stripe, PayPal, etc.
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simuler le traitement
+
+      // Ici, vous pouvez appeler un endpoint backend pour enregistrer la transaction
+      // await axios.post("/api/payments/process", {
+      //   publicationId: selectedPublication.id,
+      //   userId: user.userId,
+      //   amount: selectedPublication.price,
+      //   paymentInfo: paymentInfo
+      // });
+
+      alert(`Paiement de ${selectedPublication.price}€ effectué avec succès pour "${selectedPublication.title}"!`);
+      setShowPaymentModal(false);
+      setSelectedPublication(null);
+      setPaymentInfo({
+        cardNumber: "",
+        cardHolder: "",
+        expiryDate: "",
+        cvv: "",
+      });
+    } catch (err) {
+      console.error("Payment error:", err);
+      alert("Erreur lors du paiement. Veuillez réessayer.");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const getTypeColor = (type) => {
+    const colors = {
+      Reparation: "bg-blue-100 text-blue-800",
+      Achat: "bg-green-100 text-green-800",
+      Vente: "bg-purple-100 text-purple-800",
+      exchange: "bg-orange-100 text-orange-800",
+      donation: "bg-pink-100 text-pink-800",
+      other: "bg-gray-100 text-gray-800",
+    };
+    return colors[type] || colors.other;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 py-12">
@@ -21,30 +102,34 @@ const Shop = () => {
             Notre Catalogue
           </h1>
           <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-            Découvrez notre sélection de produits et services pour tous vos
-            besoins en réparation
+            Découvrez notre sélection de produits et services vérifiés pour tous vos besoins en réparation
           </p>
         </div>
 
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-            <p className="mt-4 text-gray-600">Chargement des produits...</p>
+            <p className="mt-4 text-gray-600">Chargement du catalogue...</p>
           </div>
         ) : error ? (
           <Card className="text-center py-12">
             <p className="text-red-500">{error}</p>
+            <button
+              onClick={fetchVerifiedPublications}
+              className="mt-4 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg"
+            >
+              Réessayer
+            </button>
           </Card>
-        ) : products.length === 0 ? (
+        ) : publications.length === 0 ? (
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
               <div className="text-6xl mb-4">📦</div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                Aucun produit disponible pour le moment
+                Aucune publication disponible pour le moment
               </h2>
               <p className="text-gray-600 mb-6">
-                Notre catalogue sera bientôt disponible. En attendant, n'hésitez
-                pas à nous contacter pour vos besoins spécifiques.
+                Le catalogue sera bientôt rempli. En attendant, n'hésitez pas à nous contacter pour vos besoins spécifiques.
               </p>
               <a
                 href="/contact"
@@ -56,35 +141,163 @@ const Shop = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <Card key={product.id} hover>
-                <div className="aspect-square bg-gray-200 rounded-lg mb-4 flex items-center justify-center">
-                  {product.image ? (
+            {publications.map((publication) => (
+              <Card key={publication.id} hover className="flex flex-col">
+                {/* Image */}
+                {publication.fileUrl && publication.fileType?.startsWith("image/") && (
+                  <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">
                     <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover rounded-lg"
+                      src={`http://localhost:9090${publication.fileUrl}`}
+                      alt={publication.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
                     />
-                  ) : (
-                    <span className="text-4xl">📦</span>
-                  )}
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {product.name}
-                </h3>
-                <p className="text-gray-600 mb-4 line-clamp-2">
-                  {product.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-yellow-600">
-                    {product.price}€
-                  </span>
-                  <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                    Voir plus
-                  </button>
+                  </div>
+                )}
+                
+                <div className="flex-1 flex flex-col">
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900 flex-1">
+                      {publication.title}
+                    </h3>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getTypeColor(publication.type)} ml-2`}>
+                      {publication.type}
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-600 mb-4 line-clamp-3 flex-1">
+                    {publication.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <span className="text-2xl font-bold text-yellow-600">
+                      {publication.price}€
+                    </span>
+                    <button
+                      onClick={() => handleBuyClick(publication)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                    >
+                      Acheter
+                    </button>
+                  </div>
                 </div>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* Payment Modal */}
+        {showPaymentModal && selectedPublication && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Paiement - {selectedPublication.title}
+              </h2>
+              <p className="text-gray-600 mb-2">
+                Montant: <span className="font-bold text-yellow-600">{selectedPublication.price}€</span>
+              </p>
+              
+              <form onSubmit={handlePayment} className="space-y-4 mt-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Numéro de carte
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentInfo.cardNumber}
+                    onChange={(e) => setPaymentInfo({ ...paymentInfo, cardNumber: e.target.value.replace(/\D/g, "").slice(0, 16) })}
+                    placeholder="1234 5678 9012 3456"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Titulaire de la carte
+                  </label>
+                  <input
+                    type="text"
+                    value={paymentInfo.cardHolder}
+                    onChange={(e) => setPaymentInfo({ ...paymentInfo, cardHolder: e.target.value })}
+                    placeholder="NOM PRÉNOM"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                    required
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Date d'expiration
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentInfo.expiryDate}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/\D/g, "");
+                        if (value.length >= 2) {
+                          value = value.slice(0, 2) + "/" + value.slice(2, 4);
+                        }
+                        setPaymentInfo({ ...paymentInfo, expiryDate: value });
+                      }}
+                      placeholder="MM/AA"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      maxLength={5}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      CVV
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentInfo.cvv}
+                      onChange={(e) => setPaymentInfo({ ...paymentInfo, cvv: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+                      placeholder="123"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                      maxLength={3}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      setSelectedPublication(null);
+                      setPaymentInfo({
+                        cardNumber: "",
+                        cardHolder: "",
+                        expiryDate: "",
+                        cvv: "",
+                      });
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors"
+                    disabled={processingPayment}
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={processingPayment}
+                  >
+                    {processingPayment ? "Traitement..." : `Payer ${selectedPublication.price}€`}
+                  </button>
+                </div>
+              </form>
+              
+              <p className="text-xs text-gray-500 mt-4 text-center">
+                Note: Ceci est une simulation. Dans un environnement de production, utilisez un système de paiement sécurisé.
+              </p>
+            </div>
           </div>
         )}
       </div>

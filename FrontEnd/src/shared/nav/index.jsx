@@ -1,10 +1,18 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, isAdmin, logout, user } = useAuth();
 
   const isActive = (path) => location.pathname === path;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <nav className="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
@@ -16,7 +24,7 @@ export const Navbar = () => {
           >
             Fixer
           </Link>
-          <div className="flex space-x-1 md:space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-4">
             <Link
               to="/"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -57,6 +65,46 @@ export const Navbar = () => {
             >
               Publications
             </Link>
+            {isAuthenticated && isAdmin() && (
+              <Link
+                to="/admin"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  location.pathname.startsWith("/admin")
+                    ? "bg-yellow-500 text-black"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                Admin
+              </Link>
+            )}
+            {isAuthenticated ? (
+              <div className="flex items-center space-x-2 ml-4">
+                <span className="text-sm text-gray-300">
+                  {user?.username || user?.email}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium transition-colors"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 ml-4">
+                <Link
+                  to="/login"
+                  className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-md text-sm font-medium transition-colors"
+                >
+                  Connexion
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm font-medium transition-colors"
+                >
+                  Inscription
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

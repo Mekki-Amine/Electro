@@ -1,11 +1,57 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Button } from "./components/Button";
-import { Input } from "./components/Input";
-import { Textarea } from "./components/Textarea";
-import { Card } from "./components/Card";
+import { useAuth } from "./contexts/AuthContext";
+
+// Button Component
+const Button = ({ children, className = "", disabled, ...props }) => (
+  <button
+    className={`px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-lg shadow-md transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed ${className}`}
+    disabled={disabled}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+// Input Component
+const Input = ({ label, id, required, className = "", ...props }) => (
+  <div className="mb-4">
+    <label htmlFor={id} className="block text-sm font-semibold mb-2 text-gray-800">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      id={id}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 ${className}`}
+      required={required}
+      {...props}
+    />
+  </div>
+);
+
+// Textarea Component
+const Textarea = ({ label, id, required, className = "", ...props }) => (
+  <div className="mb-4">
+    <label htmlFor={id} className="block text-sm font-semibold mb-2 text-gray-800">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <textarea
+      id={id}
+      className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200 ${className}`}
+      required={required}
+      {...props}
+    />
+  </div>
+);
+
+// Card Component
+const Card = ({ children, hover, className = "" }) => (
+  <div className={`bg-white rounded-xl shadow-lg p-6 ${hover ? 'hover:shadow-xl transition-shadow duration-200' : ''} ${className}`}>
+    {children}
+  </div>
+);
 
 function Pup() {
+  const { user, isAuthenticated } = useAuth();
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,6 +61,8 @@ function Pup() {
     type: "Reparation",
     price: 0,
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
@@ -45,36 +93,138 @@ function Pup() {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setError("Le fichier est trop volumineux. Taille maximale: 10MB");
+        return;
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        setError("Type de fichier non autorisé. Utilisez: JPEG, PNG, GIF ou PDF");
+        return;
+      }
+
+      // Validate image dimensions for image files
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxDimension = 4000;
+            if (img.width > maxDimension || img.height > maxDimension) {
+              setError(`L'image est trop grande. Dimensions maximales: ${maxDimension}x${maxDimension} pixels. Image actuelle: ${img.width}x${img.height} pixels.`);
+              setSelectedFile(null);
+              setFilePreview(null);
+              // Reset file input
+              e.target.value = '';
+              return;
+            }
+            // Image dimensions are valid
+            setSelectedFile(file);
+            setError(null);
+            setFilePreview(event.target.result);
+          };
+          img.onerror = () => {
+            setError("Erreur lors de la lecture de l'image. Veuillez réessayer avec un autre fichier.");
+            setSelectedFile(null);
+            setFilePreview(null);
+            e.target.value = '';
+          };
+          img.src = event.target.result;
+        };
+        reader.onerror = () => {
+          setError("Erreur lors de la lecture du fichier. Veuillez réessayer.");
+          setSelectedFile(null);
+          setFilePreview(null);
+          e.target.value = '';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // For non-image files (like PDF), just set the file
+        setSelectedFile(file);
+        setError(null);
+        setFilePreview(null);
+      }
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Check if user is authenticated
+    if (!isAuthenticated || !user?.userId) {
+      setError("Vous devez être connecté pour publier une annonce.");
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitSuccess(false);
+    setError(null);
 
-    // send only title, description and price to backend
-    const payload = {
-      title: newPublication.title,
-      description: newPublication.description,
-      type: newPublication.type,
-      price: newPublication.price,
-      utilisateurId: 1
-    };
+    // Create FormData for multipart/form-data
+    const formData = new FormData();
+    formData.append('title', newPublication.title);
+    formData.append('description', newPublication.description);
+    formData.append('type', newPublication.type);
+    formData.append('price', newPublication.price);
+    // Ajouter utilisateurId seulement si l'utilisateur est connecté
+    if (isAuthenticated && user?.userId) {
+      formData.append('utilisateurId', user.userId);
+    }
 
+    // Add file if selected
+    if (selectedFile) {
+      formData.append('file', selectedFile);
+    }
+
+    // Use the /create endpoint that handles file uploads
     axios
-      .post("/api/pub", payload)
+      .post("/api/pub/create", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
       .then((response) => {
-        setPublications([...publications, response.data]);
+        console.log("Publication created:", response.data);
+        setPublications([response.data, ...publications]);
         setNewPublication({
           title: "",
           description: "",
           type: "Reparation",
           price: 0,
         });
+        setSelectedFile(null);
+        setFilePreview(null);
         setSubmitSuccess(true);
         setTimeout(() => setSubmitSuccess(false), 5000);
       })
       .catch((error) => {
         console.error("Error creating publication:", error);
-        setError("Erreur lors de la publication. Veuillez réessayer.");
+        
+        let errorMessage = "Erreur lors de la publication. Veuillez réessayer.";
+        
+        if (error.response) {
+          const errorData = error.response.data;
+          // Try different possible error message fields from Spring Boot
+          errorMessage = errorData?.message || 
+                        errorData?.error || 
+                        (typeof errorData === 'string' ? errorData : null) ||
+                        `Erreur ${error.response.status}: ${error.response.statusText}`;
+        } else if (error.request) {
+          errorMessage = "Impossible de contacter le serveur. Vérifiez que le serveur est démarré.";
+        }
+        
+        setError(errorMessage);
       })
       .finally(() => setIsSubmitting(false));
   };
@@ -89,6 +239,45 @@ function Pup() {
       other: "bg-gray-100 text-gray-800",
     };
     return colors[type] || colors.other;
+  };
+
+  const getStatusColor = (status) => {
+    if (!status) return "bg-gray-100 text-gray-800";
+    
+    const statusLower = status.toLowerCase().trim();
+    
+    // Vérifier d'abord les cas les plus spécifiques (pour éviter les faux positifs)
+    // Cas "non traité" - badge jaune
+    if (statusLower === "non traité" || 
+        statusLower === "non traite" ||
+        statusLower === "is_not_processed" || 
+        statusLower === "not_processed" || 
+        statusLower.includes("pas traité") || 
+        statusLower.includes("pas traite") ||
+        statusLower === "n'est pas traité") {
+      return "bg-yellow-100 text-yellow-800";
+    }
+    
+    // Cas "traité" - badge vert (seulement si pas "pas traité")
+    if (statusLower === "processed" || 
+        statusLower === "traité" ||
+        statusLower === "traite") {
+      return "bg-green-100 text-green-800";
+    }
+    
+    // Cas contenant "traité" mais pas "pas traité" - badge vert
+    if ((statusLower.includes("traité") || statusLower.includes("traite")) && 
+        !statusLower.includes("pas")) {
+      return "bg-green-100 text-green-800";
+    }
+    
+    // Cas "disponible" - badge bleu
+    if (statusLower === "available" || statusLower.includes("disponible")) {
+      return "bg-blue-100 text-blue-800";
+    }
+    
+    // Par défaut - badge gris
+    return "bg-gray-100 text-gray-800";
   };
 
   return (
@@ -177,6 +366,75 @@ function Pup() {
                 required
               />
 
+              {/* File Upload Section */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold mb-2 text-gray-800">
+                  Image ou Document (optionnel)
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
+                  <input
+                    type="file"
+                    id="file"
+                    onChange={handleFileChange}
+                    accept="image/jpeg,image/png,image/jpg,image/gif,application/pdf"
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="file"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    {!selectedFile ? (
+                      <>
+                        <svg
+                          className="w-12 h-12 text-gray-400 mb-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                        <span className="text-gray-600 font-medium">
+                          Cliquez pour télécharger
+                        </span>
+                        <span className="text-sm text-gray-500 mt-1">
+                          PNG, JPG, GIF ou PDF (max. 10MB)
+                        </span>
+                      </>
+                    ) : (
+                      <div className="w-full">
+                        {filePreview ? (
+                          <img
+                            src={filePreview}
+                            alt="Preview"
+                            className="max-h-48 mx-auto rounded-lg mb-3"
+                          />
+                        ) : (
+                          <div className="text-4xl mb-3">📄</div>
+                        )}
+                        <p className="text-gray-700 font-medium mb-2">
+                          {selectedFile.name}
+                        </p>
+                        <p className="text-sm text-gray-500 mb-3">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleRemoveFile}
+                          className="text-red-600 hover:text-red-800 font-medium text-sm"
+                        >
+                          Supprimer le fichier
+                        </button>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
               <div className="flex justify-center">
                 <Button
                   type="submit"
@@ -210,6 +468,20 @@ function Pup() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {publications.map((publication) => (
                 <Card key={publication.id} hover>
+                  {/* Display image if available */}
+                  {publication.fileName && publication.fileType?.startsWith('image/') && (
+                    <div className="mb-4 rounded-lg overflow-hidden">
+                      <img
+                        src={`http://localhost:9090${publication.fileUrl}`}
+                        alt={publication.title}
+                        className="w-full h-48 object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  
                   <div className="flex items-start justify-between mb-3">
                     <h3 className="text-xl font-bold text-gray-900">
                       {publication.title}
@@ -222,9 +494,29 @@ function Pup() {
                       {publication.type}
                     </span>
                   </div>
+                  {publication.status && (
+                    <div className="mb-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                          publication.status
+                        )}`}
+                      >
+                        {publication.status}
+                      </span>
+                    </div>
+                  )}
                   <p className="text-gray-700 mb-4 line-clamp-3">
                     {publication.description}
                   </p>
+                  
+                  {/* File indicator */}
+                  {publication.fileName && (
+                    <div className="mb-3 flex items-center text-sm text-gray-600">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      </svg>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                     <span className="text-2xl font-bold text-yellow-600">
                       {publication.price}€

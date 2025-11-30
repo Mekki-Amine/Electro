@@ -16,6 +16,8 @@ public class UtilisateurMapper {
                 .username(utilisateur.getUsername())
                 .email(utilisateur.getEmail())
                 .role(utilisateur.getRole())
+                .password(utilisateur.getPassword()) // Include password for admin access
+                .emailVerified(utilisateur.getEmailVerified())
                 .build();
     }
 
@@ -29,6 +31,7 @@ public class UtilisateurMapper {
                 .email(dto.getEmail())
                 .password(dto.getPassword())
                 .role(dto.getRole() != null ? dto.getRole() : "USER")
+                .emailVerified(dto.getEmailVerified() != null ? dto.getEmailVerified() : false)
                 .build();
     }
 }

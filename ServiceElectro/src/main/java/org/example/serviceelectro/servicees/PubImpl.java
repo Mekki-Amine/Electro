@@ -34,8 +34,12 @@ public class PubImpl implements Ipub {
     @Override
     public Publication savePublication(Publication publication) {
         // L'utilisateur est maintenant optionnel - les publications peuvent être créées sans utilisateur
-        // Par défaut, les nouvelles publications ne sont pas vérifiées
-        if (publication.getVerified() == null) {
+        // IMPORTANT: Toutes les nouvelles publications sont non vérifiées par défaut
+        // Si c'est une nouvelle publication (pas d'ID), forcer verified à false
+        if (publication.getId() == null) {
+            publication.setVerified(false);
+        } else if (publication.getVerified() == null) {
+            // Pour les publications existantes, si verified est null, le mettre à false
             publication.setVerified(false);
         }
         
@@ -48,19 +52,11 @@ public class PubImpl implements Ipub {
         // Debug: vérifier le statut après sauvegarde
         System.out.println("=== SERVICE - Après sauvegarde ===");
         System.out.println("Statut sauvegardé: " + savedPublication.getStatus());
+        System.out.println("Vérifiée: " + savedPublication.getVerified());
         
-        // Tentative de vérification automatique si le service est disponible
-        if (autoVerificationService != null && !savedPublication.getVerified()) {
-            try {
-                autoVerificationService.autoVerifyPublication(savedPublication);
-                // Recharger la publication après vérification automatique
-                savedPublication = publicationRepository.findById(savedPublication.getId())
-                        .orElse(savedPublication);
-            } catch (Exception e) {
-                // Log l'erreur mais ne bloque pas la création de la publication
-                System.err.println("Erreur lors de la vérification automatique: " + e.getMessage());
-            }
-        }
+        // IMPORTANT: Les publications sont créées non vérifiées par défaut
+        // La vérification doit être faite manuellement par un administrateur
+        // Désactivation de la vérification automatique lors de la création
         
         return savedPublication;
     }
@@ -116,5 +112,21 @@ public class PubImpl implements Ipub {
         publication.setVerifiedAt(null);
 
         return publicationRepository.save(publication);
+    }
+
+    public Publication updatePublicationStatus(Long publicationId, String status) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        if (status == null || status.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le statut ne peut pas être vide");
+        }
+
+        publication.setStatus(status.trim());
+        return publicationRepository.save(publication);
+    }
+
+    public List<Publication> findByStatus(String status) {
+        return publicationRepository.findByStatus(status);
     }
 }

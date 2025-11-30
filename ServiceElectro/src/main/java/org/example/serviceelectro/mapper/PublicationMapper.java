@@ -45,7 +45,9 @@ public class PublicationMapper {
         System.out.println("=== MAPPER ===");
         System.out.println("Statut DTO: " + dto.getStatus());
         System.out.println("Statut final dans entité: " + status);
-        publication.setVerified(dto.getVerified() != null ? dto.getVerified() : false);
+        // Toujours définir verified à false pour les nouvelles publications
+        // Seul un admin peut vérifier une publication
+        publication.setVerified(false);
         publication.setVerifiedBy(dto.getVerifiedBy());
         publication.setVerifiedAt(dto.getVerifiedAt());
         publication.setFileUrl(dto.getFileUrl());

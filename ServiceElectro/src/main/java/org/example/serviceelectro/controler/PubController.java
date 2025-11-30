@@ -76,6 +76,12 @@ public class PubController {
             publicationDTO.setStatus("non traité");
         }
 
+        // IMPORTANT: S'assurer que les nouvelles publications sont toujours non vérifiées
+        // Seul un admin peut vérifier une publication via l'endpoint admin
+        if (publicationDTO.getId() == null) {
+            publicationDTO.setVerified(false);
+        }
+
         Publication publication = publicationMapper.toEntity(publicationDTO, utilisateur);
         Publication savedPublication = publicationService.savePublication(publication);
         return new ResponseEntity<>(publicationMapper.toDTO(savedPublication), HttpStatus.CREATED);
@@ -105,6 +111,7 @@ public class PubController {
             publicationDTO.setType(type);
             publicationDTO.setPrice(price);
             publicationDTO.setStatus("non traité");
+            publicationDTO.setVerified(false); // Toujours non vérifiée au début
             publicationDTO.setUtilisateurId(finalUtilisateurId);
             
             // Debug: vérifier que le statut est bien défini

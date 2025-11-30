@@ -23,4 +23,5 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
     List<Publication> findByUtilisateurId(Long utilisateurId);
     List<Publication> findByVerifiedTrue();
     List<Publication> findByVerifiedFalse();
+    List<Publication> findByStatus(String status);
 }

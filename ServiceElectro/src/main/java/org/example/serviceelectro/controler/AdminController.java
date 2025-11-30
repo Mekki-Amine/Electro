@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -146,6 +147,41 @@ public class AdminController {
     public ResponseEntity<Void> deletePublication(@PathVariable Long id) {
         publicationService.deletePublication(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/publications/status/{status}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<PublicationDTO>> getPublicationsByStatus(@PathVariable String status) {
+        List<PublicationDTO> publications = publicationService.findByStatus(status).stream()
+                .map(publicationMapper::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(publications);
+    }
+
+    @PutMapping("/publications/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PublicationDTO> updatePublicationStatus(
+            @PathVariable Long id,
+            @RequestBody UpdateStatusRequest request) {
+        if (request == null || request.getStatus() == null || request.getStatus().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le statut est requis");
+        }
+        
+        Publication updatedPublication = publicationService.updatePublicationStatus(id, request.getStatus());
+        return ResponseEntity.ok(publicationMapper.toDTO(updatedPublication));
+    }
+
+    // Classe interne pour la requête de mise à jour du statut
+    public static class UpdateStatusRequest {
+        private String status;
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
     }
 }
 

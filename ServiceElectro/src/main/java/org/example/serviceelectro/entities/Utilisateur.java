@@ -31,6 +31,10 @@ public class Utilisateur implements Serializable, UserDetails {
         private String password;
         private String email;
         private String role;
+        
+        @Column(nullable = false)
+        @Builder.Default
+        private Boolean emailVerified = false;
 
         @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
         private List<Publication> publications = new ArrayList<>();

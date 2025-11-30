@@ -20,13 +20,21 @@ public class UserImpl implements Iuserr{
 
     @Override
     public Utilisateur creatCompte (Utilisateur utilisateur) {
-        // Vérifier si l'email existe déjà
-        if (userRepository.findByEmail(utilisateur.getEmail()).isPresent()) {
+        // Normalize email to lowercase
+        String email = utilisateur.getEmail().toLowerCase().trim();
+        utilisateur.setEmail(email);
+        
+        // Vérifier si l'email existe déjà (case-insensitive lookup)
+        if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
             throw new IllegalArgumentException("Un utilisateur avec cet email existe déjà");
         }
 
         // Hasher le mot de passe
-        utilisateur.setPassword(passwordEncoder.encode(utilisateur.getPassword()));
+        if (utilisateur.getPassword() != null && !utilisateur.getPassword().isEmpty()) {
+            utilisateur.setPassword(passwordEncoder.encode(utilisateur.getPassword()));
+        } else {
+            throw new IllegalArgumentException("Le mot de passe est requis");
+        }
 
         // Définir le rôle par défaut si non spécifié
         if (utilisateur.getRole() == null || utilisateur.getRole().isEmpty()) {
@@ -42,10 +50,25 @@ public class UserImpl implements Iuserr{
     }
 
     public Optional<Utilisateur> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        // Normalize email to lowercase for case-insensitive lookup
+        return userRepository.findByEmailIgnoreCase(email.toLowerCase().trim());
     }
 
     public Optional<Utilisateur> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new IllegalArgumentException("Utilisateur non trouvé");
+        }
+        userRepository.deleteById(id);
+    }
+
+    public Utilisateur updateUser(Utilisateur utilisateur) {
+        if (!userRepository.existsById(utilisateur.getId())) {
+            throw new IllegalArgumentException("Utilisateur non trouvé");
+        }
+        return userRepository.save(utilisateur);
     }
 }

@@ -10,11 +10,21 @@ import org.example.serviceelectro.mapper.PublicationMapper;
 import org.example.serviceelectro.servicees.PubImpl;
 import org.example.serviceelectro.servicees.UserImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.example.serviceelectro.config.FileStorageProperties;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Builder
@@ -32,7 +42,8 @@ public class PubController {
     @Autowired
     private UserImpl userService;
 
-
+    @Autowired
+    private FileStorageProperties fileStorageProperties;
 
     @GetMapping
     public ResponseEntity<List<PublicationDTO>> getAllPublications() {
@@ -52,10 +63,17 @@ public class PubController {
 
     @PostMapping
     public ResponseEntity<PublicationDTO> savePublication(@Valid @RequestBody PublicationDTO publicationDTO) {
-        Utilisateur utilisateur = null;
-        if (publicationDTO.getUtilisateurId() != null) {
-            utilisateur = userService.findById(publicationDTO.getUtilisateurId())
-                    .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+        // Utiliser l'ID 1 par défaut si aucun utilisateurId n'est fourni
+        Long finalUtilisateurId = publicationDTO.getUtilisateurId() != null ? publicationDTO.getUtilisateurId() : 1L;
+        publicationDTO.setUtilisateurId(finalUtilisateurId);
+        
+        // Récupérer l'utilisateur (null si n'existe pas)
+        Utilisateur utilisateur = userService.findById(finalUtilisateurId)
+                .orElse(null);
+        
+        // Définir le statut par défaut si non fourni
+        if (publicationDTO.getStatus() == null || publicationDTO.getStatus().isEmpty()) {
+            publicationDTO.setStatus("non traité");
         }
 
         Publication publication = publicationMapper.toEntity(publicationDTO, utilisateur);
@@ -63,34 +81,175 @@ public class PubController {
         return new ResponseEntity<>(publicationMapper.toDTO(savedPublication), HttpStatus.CREATED);
     }
 
-    @PostMapping(value = "/create", consumes = {"application/x-www-form-urlencoded", "multipart/form-data"})
+    @PostMapping(value = "/create", consumes = { "application/x-www-form-urlencoded", "multipart/form-data" })
     public ResponseEntity<PublicationDTO> createPublication(
             @RequestParam("title") String title,
             @RequestParam("description") String description,
             @RequestParam("type") String type,
             @RequestParam("price") Double price,
-            @RequestParam("utilisateurId") Long utilisateurId) {
-        
-        // Vérifier que l'utilisateur existe
-        Utilisateur utilisateur = userService.findById(utilisateurId)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé"));
+            @RequestParam(value = "utilisateurId", required = false) Long utilisateurId,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
 
-        // Créer le DTO avec seulement les champs essentiels
-        PublicationDTO publicationDTO = new PublicationDTO();
-        publicationDTO.setTitle(title);
-        publicationDTO.setDescription(description);
-        publicationDTO.setType(type);
-        publicationDTO.setPrice(price);
-        publicationDTO.setStatus("DISPONIBLE"); // Valeur par défaut
-        publicationDTO.setUtilisateurId(utilisateurId);
+        try {
+            // Utiliser l'ID 1 par défaut si aucun utilisateurId n'est fourni
+            Long finalUtilisateurId = utilisateurId != null ? utilisateurId : 1L;
+            
+            // Récupérer l'utilisateur
+            Utilisateur utilisateur = userService.findById(finalUtilisateurId)
+                    .orElse(null); // Si l'utilisateur n'existe pas, on continue sans utilisateur
 
-        // Convertir en entité et sauvegarder dans MySQL
-        Publication publication = publicationMapper.toEntity(publicationDTO, utilisateur);
-        Publication savedPublication = publicationService.savePublication(publication);
-        
-        return new ResponseEntity<>(publicationMapper.toDTO(savedPublication), HttpStatus.CREATED);
+            // Créer le DTO avec les champs essentiels
+            PublicationDTO publicationDTO = new PublicationDTO();
+            publicationDTO.setTitle(title);
+            publicationDTO.setDescription(description);
+            publicationDTO.setType(type);
+            publicationDTO.setPrice(price);
+            publicationDTO.setStatus("non traité");
+            publicationDTO.setUtilisateurId(finalUtilisateurId);
+            
+            // Debug: vérifier que le statut est bien défini
+            System.out.println("=== CREATION PUBLICATION ===");
+            System.out.println("Statut défini dans DTO: " + publicationDTO.getStatus());
+
+            // Handle file upload if present
+            if (file != null && !file.isEmpty()) {
+                System.out.println("=== FILE UPLOAD ===");
+                System.out.println("Original filename: " + file.getOriginalFilename());
+
+                // Validate file size
+                if (file.getSize() > fileStorageProperties.getMaxFileSize()) {
+                    throw new IllegalArgumentException("Le fichier est trop volumineux");
+                }
+
+                // Validate file type
+                String contentType = file.getContentType();
+                boolean allowed = java.util.Arrays.asList(fileStorageProperties.getAllowedTypes())
+                        .contains(contentType);
+
+                if (!allowed) {
+                    throw new IllegalArgumentException("Type de fichier non autorisé: " + contentType);
+                }
+
+                // Create upload directory
+                Path uploadDir = Paths.get(fileStorageProperties.getUploadDir())
+                        .toAbsolutePath()
+                        .normalize();
+                java.nio.file.Files.createDirectories(uploadDir);
+
+                // Generate unique filename with timestamp
+                String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+                String storedFileName = System.currentTimeMillis() + "_" + originalFileName;
+
+                // Save file to disk
+                Path targetLocation = uploadDir.resolve(storedFileName);
+                java.nio.file.Files.copy(file.getInputStream(), targetLocation,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                System.out.println("Stored filename: " + storedFileName);
+                System.out.println("File saved to: " + targetLocation.toString());
+
+                // IMPORTANT: Use storedFileName (with timestamp) for the URL
+                publicationDTO.setFileName(originalFileName);  // User-friendly name
+                publicationDTO.setFileType(contentType);
+                publicationDTO.setFileSize(file.getSize());
+                publicationDTO.setFileUrl("/api/pub/files/" + storedFileName);  // Must include timestamp!
+
+                System.out.println("File URL: " + publicationDTO.getFileUrl());
+            }
+
+            // Convert DTO to entity and save
+            Publication publication = publicationMapper.toEntity(publicationDTO, utilisateur);
+            Publication savedPublication = publicationService.savePublication(publication);
+
+            return new ResponseEntity<>(publicationMapper.toDTO(savedPublication), HttpStatus.CREATED);
+
+        } catch (java.io.IOException ex) {
+            ex.printStackTrace();
+            throw new RuntimeException("Erreur lors de l'enregistrement du fichier: " + ex.getMessage(), ex);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException("Erreur lors de la création de la publication: " + ex.getMessage(), ex);
+        }
     }
 
+    @GetMapping("/files/{filename:.+}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
+        try {
+            System.out.println("=== FILE DOWNLOAD REQUEST ===");
+            System.out.println("Requested: " + filename);
+            
+            // Get upload directory
+            Path uploadDir = Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize();
+            Path filePath = uploadDir.resolve(filename).normalize();
+            
+            System.out.println("Looking for: " + filePath.toString());
+            System.out.println("File exists: " + java.nio.file.Files.exists(filePath));
+
+            // Security check
+            if (!filePath.startsWith(uploadDir)) {
+                System.out.println("ERROR: Security violation - path traversal attempt");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Try to load the file
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                System.out.println("ERROR: File not found or not readable");
+                
+                // If file not found, try to find it by matching the end of filename
+                // This helps with old database entries that might have wrong filenames
+                String requestedFilename = filename;
+                if (!requestedFilename.contains("_")) {
+                    // Filename doesn't have timestamp, try to find matching file
+                    System.out.println("Trying to find file with pattern: *_" + requestedFilename);
+                    
+                    try (java.util.stream.Stream<Path> files = java.nio.file.Files.list(uploadDir)) {
+                        java.util.Optional<Path> matchingFile = files
+                            .filter(f -> f.getFileName().toString().endsWith("_" + requestedFilename))
+                            .findFirst();
+                        
+                        if (matchingFile.isPresent()) {
+                            filePath = matchingFile.get();
+                            resource = new UrlResource(filePath.toUri());
+                            System.out.println("Found matching file: " + filePath.getFileName());
+                        } else {
+                            System.out.println("No matching file found");
+                            return ResponseEntity.notFound().build();
+                        }
+                    }
+                } else {
+                    return ResponseEntity.notFound().build();
+                }
+            }
+
+            // Determine content type
+            String contentType = "application/octet-stream";
+            try {
+                contentType = java.nio.file.Files.probeContentType(filePath);
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+            } catch (Exception e) {
+                System.out.println("Could not determine content type");
+            }
+
+            System.out.println("Serving file with content type: " + contentType);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                    .header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                    .header(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, OPTIONS")
+                    .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
+                    .body(resource);
+
+        } catch (Exception e) {
+            System.out.println("ERROR: Exception while serving file");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePublication(@PathVariable Long id) {
@@ -127,14 +286,14 @@ public class PubController {
     public ResponseEntity<PublicationDTO> verifyPublication(
             @PathVariable Long id,
             @RequestBody(required = false) VerifyPublicationRequest request) {
-        Long adminId = (request != null && request.getAdminId() != null) 
-                ? request.getAdminId() 
+        Long adminId = (request != null && request.getAdminId() != null)
+                ? request.getAdminId()
                 : null;
-        
+
         if (adminId == null) {
             throw new IllegalArgumentException("L'ID de l'administrateur est requis");
         }
-        
+
         Publication verifiedPublication = publicationService.verifyPublication(id, adminId);
         return ResponseEntity.ok(publicationMapper.toDTO(verifiedPublication));
     }

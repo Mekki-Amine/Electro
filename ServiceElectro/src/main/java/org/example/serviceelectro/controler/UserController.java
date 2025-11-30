@@ -28,7 +28,9 @@ public class UserController {
     public ResponseEntity<UtilisateurDTO> creatCompte(@Valid @RequestBody UtilisateurDTO utilisateurDTO) {
         Utilisateur utilisateur = utilisateurMapper.toEntity(utilisateurDTO);
         Utilisateur savedUtilisateur = userService.creatCompte(utilisateur);
-        return new ResponseEntity<>(utilisateurMapper.toDTO(savedUtilisateur), HttpStatus.CREATED);
+        UtilisateurDTO responseDTO = utilisateurMapper.toDTO(savedUtilisateur);
+        responseDTO.setPassword(null); // Don't return password
+        return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
     @GetMapping

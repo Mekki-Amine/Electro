@@ -26,7 +26,17 @@ public class PublicationMapper {
         dto.setFileName(publication.getFileName());
         dto.setFileType(publication.getFileType());
         dto.setFileSize(publication.getFileSize());
-        dto.setUtilisateurId(publication.getUtilisateur() != null ? publication.getUtilisateur().getId() : null);
+        if (publication.getUtilisateur() != null) {
+            Utilisateur utilisateur = publication.getUtilisateur();
+            dto.setUtilisateurId(utilisateur.getId());
+            String realUsername = utilisateur.getRealUsername();
+            dto.setUtilisateurUsername(realUsername != null && !realUsername.trim().isEmpty() ? realUsername : null);
+            dto.setUtilisateurEmail(utilisateur.getEmail());
+        } else {
+            dto.setUtilisateurId(null);
+            dto.setUtilisateurUsername(null);
+            dto.setUtilisateurEmail(null);
+        }
         return dto;
     }
 

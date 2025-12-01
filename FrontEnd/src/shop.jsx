@@ -3,6 +3,7 @@ import axios from "axios";
 import { Card } from "./components/Card";
 import { useAuth } from "./contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { BackButton } from "./components/BackButton";
 
 const Shop = () => {
   const [publications, setPublications] = useState([]);
@@ -29,6 +30,15 @@ const Shop = () => {
       setLoading(true);
       // Récupérer uniquement les publications vérifiées (catalogue)
       const response = await axios.get("/api/pub");
+      console.log("Publications récupérées:", response.data);
+      // Log pour déboguer les informations utilisateur
+      response.data.forEach((pub, index) => {
+        console.log(`Publication ${index + 1} (ID: ${pub.id}):`, {
+          utilisateurId: pub.utilisateurId,
+          utilisateurUsername: pub.utilisateurUsername,
+          utilisateurEmail: pub.utilisateurEmail
+        });
+      });
       setPublications(response.data);
       setError(null);
     } catch (err) {
@@ -97,6 +107,9 @@ const Shop = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 py-12">
       <div className="container mx-auto px-4">
+        <div className="mb-6">
+          <BackButton to="/" />
+        </div>
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Notre Catalogue
@@ -143,6 +156,29 @@ const Shop = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {publications.map((publication) => (
               <Card key={publication.id} hover className="flex flex-col">
+                {/* Propriétaire */}
+                {(publication.utilisateurId || publication.utilisateurUsername || publication.utilisateurEmail) && (
+                  <div className="mb-3 pb-3 border-b border-gray-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                        <span className="text-yellow-600 font-semibold text-sm">
+                          {(publication.utilisateurUsername || publication.utilisateurEmail || "U").charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {publication.utilisateurUsername || publication.utilisateurEmail || `Utilisateur #${publication.utilisateurId}` || "Utilisateur"}
+                        </p>
+                        {publication.utilisateurEmail && publication.utilisateurEmail !== publication.utilisateurUsername && (
+                          <p className="text-xs text-gray-500 truncate">
+                            {publication.utilisateurEmail}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Image */}
                 {publication.fileUrl && publication.fileType?.startsWith("image/") && (
                   <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">

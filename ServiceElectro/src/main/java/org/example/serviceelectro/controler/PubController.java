@@ -1,6 +1,5 @@
 package org.example.serviceelectro.controler;
 
-import jakarta.validation.Valid;
 import lombok.Builder;
 import org.example.serviceelectro.dto.PublicationDTO;
 import org.example.serviceelectro.dto.VerifyPublicationRequest;
@@ -62,25 +61,38 @@ public class PubController {
     }
 
     @PostMapping
-    public ResponseEntity<PublicationDTO> savePublication(@Valid @RequestBody PublicationDTO publicationDTO) {
+    public ResponseEntity<PublicationDTO> savePublication(@RequestBody PublicationDTO publicationDTO) {
+        // Définir les valeurs par défaut AVANT la validation
+        if (publicationDTO.getStatus() == null || publicationDTO.getStatus().isEmpty()) {
+            publicationDTO.setStatus("DISPONIBLE");
+        }
+        
         // Utiliser l'ID 1 par défaut si aucun utilisateurId n'est fourni
         Long finalUtilisateurId = publicationDTO.getUtilisateurId() != null ? publicationDTO.getUtilisateurId() : 1L;
         publicationDTO.setUtilisateurId(finalUtilisateurId);
         
-        // Récupérer l'utilisateur (null si n'existe pas)
-        Utilisateur utilisateur = userService.findById(finalUtilisateurId)
-                .orElse(null);
-        
-        // Définir le statut par défaut si non fourni
-        if (publicationDTO.getStatus() == null || publicationDTO.getStatus().isEmpty()) {
-            publicationDTO.setStatus("non traité");
-        }
-
         // IMPORTANT: S'assurer que les nouvelles publications sont toujours non vérifiées
-        // Seul un admin peut vérifier une publication via l'endpoint admin
         if (publicationDTO.getId() == null) {
             publicationDTO.setVerified(false);
         }
+        
+        // Validation manuelle des champs requis
+        if (publicationDTO.getTitle() == null || publicationDTO.getTitle().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le titre est requis");
+        }
+        if (publicationDTO.getDescription() == null || publicationDTO.getDescription().trim().isEmpty()) {
+            throw new IllegalArgumentException("La description est requise");
+        }
+        if (publicationDTO.getType() == null || publicationDTO.getType().trim().isEmpty()) {
+            throw new IllegalArgumentException("Le type est requis");
+        }
+        if (publicationDTO.getPrice() == null || publicationDTO.getPrice() <= 0) {
+            throw new IllegalArgumentException("Le prix est requis et doit être positif");
+        }
+        
+        // Récupérer l'utilisateur (null si n'existe pas)
+        Utilisateur utilisateur = userService.findById(finalUtilisateurId)
+                .orElse(null);
 
         Publication publication = publicationMapper.toEntity(publicationDTO, utilisateur);
         Publication savedPublication = publicationService.savePublication(publication);

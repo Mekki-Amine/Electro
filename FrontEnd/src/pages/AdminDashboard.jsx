@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import UserManagement from '../components/admin/UserManagement';
 import PublicationManagement from '../components/admin/PublicationManagement';
+import MessageManagement from '../components/admin/MessageManagement';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('publications');
@@ -66,6 +67,16 @@ const AdminDashboard = () => {
             >
               Gérer les Utilisateurs
             </button>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`px-6 py-4 font-semibold transition-colors ${
+                activeTab === 'messages'
+                  ? 'text-yellow-600 border-b-2 border-yellow-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Messages
+            </button>
           </div>
         </div>
       </div>
@@ -74,6 +85,7 @@ const AdminDashboard = () => {
       <main className="container mx-auto px-4 py-8">
         {activeTab === 'publications' && <PublicationManagement />}
         {activeTab === 'users' && <UserManagement />}
+        {activeTab === 'messages' && <MessageManagement />}
       </main>
     </div>
   );

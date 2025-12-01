@@ -43,6 +43,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/pub/create").permitAll()
                         .requestMatchers("/api/comments/publication/**").permitAll()
                         
+                        // Messages endpoints - require authentication
+                        .requestMatchers("/api/messages/**").authenticated()
+                        
                         // Admin endpoints - require ADMIN role
                         .requestMatchers("/api/pub/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -51,6 +51,11 @@ public class Utilisateur implements Serializable, UserDetails {
         public String getUsername() {
                 return email;
         }
+        
+        // Getter pour le champ username réel (pas l'email)
+        public String getRealUsername() {
+                return username;
+        }
 
         @Override
         public boolean isAccountNonExpired() {

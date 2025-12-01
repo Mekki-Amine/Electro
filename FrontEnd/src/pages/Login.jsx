@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { BackButton } from '../components/BackButton';
 import { testApiConnection } from '../utils/apiTest';
 
 const Login = () => {
@@ -77,6 +78,9 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
+        <div className="mb-4">
+          <BackButton to="/" />
+        </div>
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Connexion</h1>

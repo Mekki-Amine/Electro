@@ -9,6 +9,7 @@ import Shop from "./shop";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import AdminDashboard from "./pages/AdminDashboard";
+import Messages from "./pages/Messages";
 import { Layout } from "./shared/layout";
 
 function App() {
@@ -35,6 +36,14 @@ function App() {
                   <Route path="/shop" element={<Shop />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/publications" element={<Pup />} />
+                  <Route
+                    path="/messages"
+                    element={
+                      <ProtectedRoute>
+                        <Messages />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Routes>
               </Layout>
             }

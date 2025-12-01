@@ -42,4 +42,6 @@ public class PublicationDTO {
     private Long fileSize;
 
     private Long utilisateurId;
+    private String utilisateurUsername;
+    private String utilisateurEmail;
 }

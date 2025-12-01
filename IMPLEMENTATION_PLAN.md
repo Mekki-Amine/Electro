@@ -49,3 +49,6 @@
 2. **Important** : Système de paiement + Logo et design
 3. **Souhaitable** : Google OAuth
 
+
+
+

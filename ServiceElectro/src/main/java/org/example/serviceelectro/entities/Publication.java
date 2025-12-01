@@ -58,7 +58,7 @@ public class Publication implements Serializable {
     @Column
     private Long fileSize;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "utilisateur_id")
     private Utilisateur utilisateur;
 

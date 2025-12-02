@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../Card';
 import { useAuth } from '../../contexts/AuthContext';
 
 const MessageManagement = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -151,24 +153,61 @@ const MessageManagement = () => {
               users.map((u) => (
                 <Card
                   key={u.id}
-                  className={`p-4 cursor-pointer transition-colors ${
+                  className={`p-4 transition-colors ${
                     selectedUserId === u.id
                       ? 'bg-yellow-50 border-yellow-500'
                       : 'hover:bg-gray-50'
                   }`}
-                  onClick={() => setSelectedUserId(u.id)}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <div 
+                      className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center cursor-pointer hover:bg-yellow-200 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('Navigating to user profile:', u.id);
+                        window.location.href = `/user/${u.id}`;
+                      }}
+                      title="Voir le profil"
+                    >
                       <span className="text-yellow-600 font-semibold">
                         {(u.username || u.email || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">
+                      <p 
+                        className="font-semibold text-gray-900 truncate cursor-pointer hover:text-yellow-600 hover:underline transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          console.log('Navigating to user profile:', u.id);
+                          window.location.href = `/user/${u.id}`;
+                        }}
+                        title="Cliquez pour voir le profil"
+                      >
                         {u.username || u.email || 'Utilisateur'}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">{u.email}</p>
+                      <p 
+                        className="text-xs text-gray-500 truncate cursor-pointer hover:text-yellow-600 hover:underline transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          console.log('Navigating to user profile:', u.id);
+                          window.location.href = `/user/${u.id}`;
+                        }}
+                        title="Cliquez pour voir le profil"
+                      >
+                        {u.email}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setSelectedUserId(u.id);
+                        }}
+                        className="mt-1 text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        Ouvrir la conversation
+                      </button>
                     </div>
                   </div>
                 </Card>
@@ -183,7 +222,18 @@ const MessageManagement = () => {
             <>
               <div className="border-b border-gray-200 pb-4 mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Conversation avec {selectedUser.username || selectedUser.email}
+                  Conversation avec{' '}
+                  <span 
+                    className="text-yellow-600 hover:text-yellow-700 cursor-pointer underline font-semibold"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Navigating to user profile:', selectedUser.id);
+                      window.location.href = `/user/${selectedUser.id}`;
+                    }}
+                    title="Cliquez pour voir le profil"
+                  >
+                    {selectedUser.username || selectedUser.email}
+                  </span>
                 </h3>
               </div>
 
@@ -196,6 +246,7 @@ const MessageManagement = () => {
                 ) : (
                   messages.map((message) => {
                     const isAdmin = message.senderId === adminId;
+                    const senderId = isAdmin ? adminId : selectedUserId;
                     return (
                       <div
                         key={message.id}
@@ -208,6 +259,13 @@ const MessageManagement = () => {
                               : 'bg-gray-200 text-gray-900'
                           }`}
                         >
+                          <p 
+                            className="text-xs font-semibold mb-1 cursor-pointer hover:underline"
+                            onClick={() => navigate(`/user/${senderId}`)}
+                            title="Voir le profil"
+                          >
+                            {isAdmin ? (selectedUser?.username || selectedUser?.email || 'Admin') : (selectedUser?.username || selectedUser?.email || 'Utilisateur')}
+                          </p>
                           <p className="text-sm">{message.content}</p>
                           <p className="text-xs mt-1 opacity-70">
                             {new Date(message.createdAt).toLocaleString('fr-FR')}

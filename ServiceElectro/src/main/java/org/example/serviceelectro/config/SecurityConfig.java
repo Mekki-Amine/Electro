@@ -37,6 +37,8 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/utilis").permitAll() // Allow signup
+                        .requestMatchers("/api/utilis/profile/**").permitAll() // Allow public profile access (includes photos)
+                        .requestMatchers("/api/utilis/{id}").permitAll() // Allow public user info access
                         .requestMatchers("/api/pub/files/**").permitAll()
                         .requestMatchers("/api/pub").permitAll()
                         .requestMatchers("/api/pub/{id}").permitAll()

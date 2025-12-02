@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { Logo } from "../../components/Logo";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -20,8 +21,9 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <Link
             to="/"
-            className="text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
+            className="flex items-center gap-3 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
           >
+            <Logo className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0" />
             Fixer
           </Link>
           <div className="flex items-center space-x-1 md:space-x-4">
@@ -75,6 +77,18 @@ export const Navbar = () => {
                 }`}
               >
                 Messages
+              </Link>
+            )}
+            {isAuthenticated && (
+              <Link
+                to="/profile"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  isActive("/profile")
+                    ? "bg-yellow-500 text-black"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                Profil
               </Link>
             )}
             {isAuthenticated && isAdmin() && (

@@ -52,6 +52,9 @@ public class AuthService {
         }
         
         System.out.println("✅ Login successful for: " + email);
+        
+        // Mettre à jour le statut de connexion
+        userService.setUserOnline(utilisateur.getId(), true);
 
         String token = jwtUtil.generateToken(utilisateur.getEmail(), utilisateur.getRole());
 

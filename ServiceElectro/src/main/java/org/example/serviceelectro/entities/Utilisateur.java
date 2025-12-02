@@ -35,6 +35,23 @@ public class Utilisateur implements Serializable, UserDetails {
         @Column(nullable = false)
         @Builder.Default
         private Boolean emailVerified = false;
+        
+        // Champs de profil
+        @Column(nullable = true)
+        private String profilePhoto; // URL de la photo de profil
+        
+        @Column(nullable = true)
+        private String phone; // Téléphone
+        
+        @Column(nullable = true, length = 500)
+        private String address; // Adresse
+        
+        @Column(nullable = false)
+        @Builder.Default
+        private Boolean isOnline = false; // Statut de connexion
+        
+        @Column(nullable = true)
+        private LocalDateTime lastLogin; // Dernière connexion
 
         @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
         private List<Publication> publications = new ArrayList<>();

@@ -32,10 +32,12 @@ public class PublicationMapper {
             String realUsername = utilisateur.getRealUsername();
             dto.setUtilisateurUsername(realUsername != null && !realUsername.trim().isEmpty() ? realUsername : null);
             dto.setUtilisateurEmail(utilisateur.getEmail());
+            dto.setUtilisateurProfilePhoto(utilisateur.getProfilePhoto());
         } else {
             dto.setUtilisateurId(null);
             dto.setUtilisateurUsername(null);
             dto.setUtilisateurEmail(null);
+            dto.setUtilisateurProfilePhoto(null);
         }
         return dto;
     }

@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -30,6 +32,13 @@ public class UtilisateurDTO {
     private String role;
     
     private Boolean emailVerified;
+    
+    // Champs de profil
+    private String profilePhoto;
+    private String phone;
+    private String address;
+    private Boolean isOnline;
+    private LocalDateTime lastLogin;
 }
 
 

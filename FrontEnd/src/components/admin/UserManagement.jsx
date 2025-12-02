@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card } from '../Card';
 
 const UserManagement = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -140,10 +142,28 @@ const UserManagement = () => {
                       {user.username?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 
+                        className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-yellow-600 hover:underline transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Navigating to user profile:', user.id);
+                          window.location.href = `/user/${user.id}`;
+                        }}
+                        title="Cliquez pour voir le profil"
+                      >
                         {user.username || 'Sans nom'}
                       </h3>
-                      <p className="text-gray-600">{user.email}</p>
+                      <p 
+                        className="text-gray-600 cursor-pointer hover:text-yellow-600 hover:underline transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Navigating to user profile:', user.id);
+                          window.location.href = `/user/${user.id}`;
+                        }}
+                        title="Cliquez pour voir le profil"
+                      >
+                        {user.email}
+                      </p>
                       <div className="flex items-center space-x-2 mt-1 flex-wrap">
                         <span
                           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${

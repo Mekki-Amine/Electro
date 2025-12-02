@@ -44,4 +44,5 @@ public class PublicationDTO {
     private Long utilisateurId;
     private String utilisateurUsername;
     private String utilisateurEmail;
+    private String utilisateurProfilePhoto;
 }

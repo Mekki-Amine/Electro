@@ -165,7 +165,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Appeler l'endpoint de déconnexion pour mettre à jour le statut
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      try {
+        await axios.post(`/api/auth/logout/${userId}`);
+      } catch (err) {
+        console.error('Error logging out:', err);
+      }
+    }
+    
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     localStorage.removeItem('username');

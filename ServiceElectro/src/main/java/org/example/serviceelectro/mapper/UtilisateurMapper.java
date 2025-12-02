@@ -13,11 +13,16 @@ public class UtilisateurMapper {
         }
         return UtilisateurDTO.builder()
                 .id(utilisateur.getId())
-                .username(utilisateur.getUsername())
+                .username(utilisateur.getRealUsername())
                 .email(utilisateur.getEmail())
                 .role(utilisateur.getRole())
                 .password(utilisateur.getPassword()) // Include password for admin access
                 .emailVerified(utilisateur.getEmailVerified())
+                .profilePhoto(utilisateur.getProfilePhoto())
+                .phone(utilisateur.getPhone())
+                .address(utilisateur.getAddress())
+                .isOnline(utilisateur.getIsOnline())
+                .lastLogin(utilisateur.getLastLogin())
                 .build();
     }
 

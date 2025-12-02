@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import AdminDashboard from "./pages/AdminDashboard";
 import Messages from "./pages/Messages";
+import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import { Layout } from "./shared/layout";
 
 function App() {
@@ -43,6 +45,18 @@ function App() {
                         <Messages />
                       </ProtectedRoute>
                     }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/user/:userId"
+                    element={<UserProfile />}
                   />
                 </Routes>
               </Layout>

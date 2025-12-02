@@ -201,7 +201,20 @@ const Messages = () => {
         </div>
         <Card className="p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
-            Messages avec l'administrateur
+            Messages avec{' '}
+            {adminId && (
+              <span 
+                className="text-yellow-600 hover:text-yellow-700 cursor-pointer underline font-semibold"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/user/${adminId}`);
+                }}
+                title="Cliquez pour voir le profil de l'administrateur"
+              >
+                l'administrateur
+              </span>
+            )}
+            {!adminId && 'l\'administrateur'}
           </h1>
           
           {error && (
@@ -225,6 +238,7 @@ const Messages = () => {
             ) : (
               messages.map((message) => {
                 const isUser = message.senderId === user.userId;
+                const senderId = isUser ? user.userId : adminId;
                 return (
                   <div
                     key={message.id}
@@ -237,6 +251,13 @@ const Messages = () => {
                           : 'bg-gray-200 text-gray-900'
                       }`}
                     >
+                      <p 
+                        className="text-xs font-semibold mb-1 cursor-pointer hover:underline"
+                        onClick={() => senderId && navigate(`/user/${senderId}`)}
+                        title="Voir le profil"
+                      >
+                        {isUser ? (user?.username || user?.email || 'Vous') : 'Administrateur'}
+                      </p>
                       <p className="text-sm">{message.content}</p>
                       <p className="text-xs mt-1 opacity-70">
                         {new Date(message.createdAt).toLocaleString('fr-FR')}

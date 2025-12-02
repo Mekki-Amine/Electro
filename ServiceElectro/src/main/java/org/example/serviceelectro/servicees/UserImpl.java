@@ -71,4 +71,37 @@ public class UserImpl implements Iuserr{
         }
         return userRepository.save(utilisateur);
     }
+    
+    public Utilisateur updateProfile(Long userId, String phone, String address) {
+        Optional<Utilisateur> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Utilisateur non trouvé");
+        }
+        Utilisateur user = userOpt.get();
+        if (phone != null) user.setPhone(phone);
+        if (address != null) user.setAddress(address);
+        return userRepository.save(user);
+    }
+    
+    public Utilisateur updateProfilePhoto(Long userId, String photoUrl) {
+        Optional<Utilisateur> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Utilisateur non trouvé");
+        }
+        Utilisateur user = userOpt.get();
+        user.setProfilePhoto(photoUrl);
+        return userRepository.save(user);
+    }
+    
+    public void setUserOnline(Long userId, boolean isOnline) {
+        Optional<Utilisateur> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            Utilisateur user = userOpt.get();
+            user.setIsOnline(isOnline);
+            if (isOnline) {
+                user.setLastLogin(java.time.LocalDateTime.now());
+            }
+            userRepository.save(user);
+        }
+    }
 }

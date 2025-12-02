@@ -472,6 +472,58 @@ function Pup() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {publications.map((publication) => (
                 <Card key={publication.id} hover>
+                  {/* Propriétaire avec photo de profil */}
+                  {(publication.utilisateurId || publication.utilisateurUsername || publication.utilisateurEmail) && (
+                    <div className="mb-3 pb-3 border-b border-gray-200">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center cursor-pointer hover:bg-yellow-200 transition-colors overflow-hidden relative"
+                          onClick={() => {
+                            if (publication.utilisateurId) {
+                              window.location.href = `/user/${publication.utilisateurId}`;
+                            }
+                          }}
+                          title="Voir le profil"
+                        >
+                          {publication.utilisateurProfilePhoto ? (
+                            <img
+                              src={`http://localhost:9090${publication.utilisateurProfilePhoto}`}
+                              alt={publication.utilisateurUsername || publication.utilisateurEmail || "Utilisateur"}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Si l'image ne charge pas, cacher l'image et afficher l'initiale
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          ) : null}
+                          <span 
+                            className={`text-yellow-600 font-semibold text-sm absolute inset-0 flex items-center justify-center ${publication.utilisateurProfilePhoto ? 'hidden' : ''}`}
+                          >
+                            {(publication.utilisateurUsername || publication.utilisateurEmail || "U").charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div 
+                          className="flex-1 min-w-0 cursor-pointer"
+                          onClick={() => {
+                            if (publication.utilisateurId) {
+                              window.location.href = `/user/${publication.utilisateurId}`;
+                            }
+                          }}
+                          title="Voir le profil"
+                        >
+                          <p className="text-sm font-semibold text-gray-900 truncate hover:text-yellow-600 transition-colors">
+                            {publication.utilisateurUsername || publication.utilisateurEmail || `Utilisateur #${publication.utilisateurId}` || "Utilisateur"}
+                          </p>
+                          {publication.utilisateurEmail && publication.utilisateurEmail !== publication.utilisateurUsername && (
+                            <p className="text-xs text-gray-500 truncate">
+                              {publication.utilisateurEmail}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Display image if available */}
                   {publication.fileName && publication.fileType?.startsWith('image/') && (
                     <div className="mb-4 rounded-lg overflow-hidden">

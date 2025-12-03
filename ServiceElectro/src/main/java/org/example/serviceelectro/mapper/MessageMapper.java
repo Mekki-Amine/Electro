@@ -17,6 +17,12 @@ public class MessageMapper {
         dto.setId(message.getId());
         dto.setContent(message.getContent());
         dto.setIsRead(message.getIsRead());
+        dto.setFileUrl(message.getFileUrl());
+        dto.setFileName(message.getFileName());
+        dto.setFileType(message.getFileType());
+        dto.setLatitude(message.getLatitude());
+        dto.setLongitude(message.getLongitude());
+        dto.setLocationName(message.getLocationName());
         dto.setCreatedAt(message.getCreatedAt());
         dto.setUpdatedAt(message.getUpdatedAt());
 
@@ -67,10 +73,16 @@ public class MessageMapper {
             // Utiliser le constructeur au lieu du builder pour éviter les problèmes avec @CreatedDate
             Message message = new Message();
             message.setId(dto.getId());
-            message.setContent(dto.getContent() != null ? dto.getContent().trim() : "");
+            message.setContent(dto.getContent() != null && !dto.getContent().trim().isEmpty() ? dto.getContent().trim() : null);
             message.setSender(sender);
             message.setReceiver(receiver);
             message.setIsRead(dto.getIsRead() != null ? dto.getIsRead() : false);
+            message.setFileUrl(dto.getFileUrl());
+            message.setFileName(dto.getFileName());
+            message.setFileType(dto.getFileType());
+            message.setLatitude(dto.getLatitude());
+            message.setLongitude(dto.getLongitude());
+            message.setLocationName(dto.getLocationName());
             // Ne pas définir createdAt et updatedAt - ils seront générés automatiquement par @CreatedDate
             
             System.out.println("✅ Message entity created: content=" + message.getContent() + 

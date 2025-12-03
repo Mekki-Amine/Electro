@@ -1,7 +1,6 @@
 package org.example.serviceelectro.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -24,8 +23,7 @@ public class Message implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    @Column(nullable = false, length = 2000)
+    @Column(nullable = true, length = 2000)
     private String content;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -39,6 +37,24 @@ public class Message implements Serializable {
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private Boolean isRead = false;
+
+    @Column(nullable = true)
+    private String fileUrl; // URL du fichier attaché (image, document, etc.)
+
+    @Column(nullable = true)
+    private String fileName; // Nom du fichier
+
+    @Column(nullable = true)
+    private String fileType; // Type MIME du fichier
+
+    @Column(nullable = true)
+    private Double latitude; // Latitude pour la localisation
+
+    @Column(nullable = true)
+    private Double longitude; // Longitude pour la localisation
+
+    @Column(nullable = true, length = 500)
+    private String locationName; // Nom de la localisation (adresse, lieu, etc.)
 
     @CreatedDate
     @Column(nullable = true, updatable = false)

@@ -108,7 +108,7 @@ const Contact = () => {
                 id="phone"
                 name="phone"
                 type="tel"
-                placeholder="+33 6 12 34 56 78"
+                placeholder="+216 XX XXX XXX ou 0X XXX XXX"
                 value={formData.phone}
                 onChange={handleChange}
                 error={formErrors.phone}

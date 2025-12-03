@@ -36,13 +36,19 @@ public class MessageImpl implements Imessage {
             if (message.getReceiver() == null) {
                 throw new IllegalArgumentException("Le destinataire est requis pour créer un message");
             }
-            if (message.getContent() == null || message.getContent().trim().isEmpty()) {
-                throw new IllegalArgumentException("Le contenu du message est requis");
+            
+            // Validation : Le message doit avoir au moins un contenu, un fichier ou une localisation
+            boolean hasContent = message.getContent() != null && !message.getContent().trim().isEmpty();
+            boolean hasFile = message.getFileUrl() != null && !message.getFileUrl().trim().isEmpty();
+            boolean hasLocation = message.getLatitude() != null && message.getLongitude() != null;
+            
+            if (!hasContent && !hasFile && !hasLocation) {
+                throw new IllegalArgumentException("Le message doit contenir du texte, un fichier ou une localisation");
             }
             
-            String contentPreview = message.getContent().length() > 50 
+            String contentPreview = hasContent && message.getContent().length() > 50 
                 ? message.getContent().substring(0, 50) + "..." 
-                : message.getContent();
+                : (hasContent ? message.getContent() : "[Message avec fichier/localisation]");
             System.out.println("💾 Saving message: " + contentPreview);
             System.out.println("   Sender ID: " + (message.getSender() != null ? message.getSender().getId() : "null"));
             System.out.println("   Receiver ID: " + (message.getReceiver() != null ? message.getReceiver().getId() : "null"));
@@ -59,9 +65,9 @@ public class MessageImpl implements Imessage {
                         String senderName = saved.getSender().getRealUsername() != null 
                             ? saved.getSender().getRealUsername() 
                             : saved.getSender().getEmail();
-                        String messagePreview = saved.getContent().length() > 50 
+                        String messagePreview = saved.getContent() != null && saved.getContent().length() > 50 
                             ? saved.getContent().substring(0, 50) + "..." 
-                            : saved.getContent();
+                            : (saved.getContent() != null ? saved.getContent() : "[Message avec fichier/localisation]");
                         String notificationMessage = String.format("Nouveau message de %s: %s", senderName, messagePreview);
                         
                         System.out.println("🔔 Creating notification for receiver ID: " + saved.getReceiver().getId());
@@ -96,8 +102,28 @@ public class MessageImpl implements Imessage {
     }
 
     @Override
-    public void deleteMessage(Long id) {
+    public void deleteMessage(Long id, Long userId) {
+        Optional<Message> messageOpt = messageRepository.findById(id);
+        if (messageOpt.isEmpty()) {
+            throw new IllegalArgumentException("Message non trouvé avec l'ID: " + id);
+        }
+        
+        Message message = messageOpt.get();
+        // Vérifier que l'utilisateur est soit l'expéditeur soit le destinataire
+        Long senderId = message.getSender() != null ? message.getSender().getId() : null;
+        Long receiverId = message.getReceiver() != null ? message.getReceiver().getId() : null;
+        
+        if (!userId.equals(senderId) && !userId.equals(receiverId)) {
+            throw new IllegalArgumentException("Vous n'êtes pas autorisé à supprimer ce message");
+        }
+        
         messageRepository.deleteById(id);
+    }
+    
+    public void deleteMessages(List<Long> messageIds, Long userId) {
+        for (Long messageId : messageIds) {
+            deleteMessage(messageId, userId);
+        }
     }
 
     @Override

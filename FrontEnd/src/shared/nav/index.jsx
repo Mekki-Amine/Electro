@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Logo } from "../../components/Logo";
 import { useUserNotifications } from "../../components/UserNotifications";
+import { useCart } from "../../components/useCart";
 import axios from "axios";
 
 export const Navbar = () => {
@@ -10,6 +11,7 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, logout, user } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, handleNotificationClick } = useUserNotifications();
+  const { cartItemCount } = useCart();
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -63,9 +65,9 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <Link
             to="/"
-            className="flex items-center gap-3 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
+            className="flex items-center gap-2 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200 -ml-10"
           >
-            <Logo className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0" />
+            <Logo className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0" />
             Fixer
           </Link>
           <div className="flex items-center space-x-1 md:space-x-4">
@@ -107,7 +109,7 @@ export const Navbar = () => {
                   : "text-gray-300 hover:bg-gray-700 hover:text-white"
               }`}
             >
-              Publications
+              Ajouter un appareil
             </Link>
             {isAuthenticated && !isAdmin() && (
               <Link
@@ -131,6 +133,23 @@ export const Navbar = () => {
                 }`}
               >
                 Profil
+              </Link>
+            )}
+            {isAuthenticated && !isAdmin() && (
+              <Link
+                to="/cart"
+                className={`relative px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  isActive("/cart")
+                    ? "bg-yellow-500 text-black"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                🛒
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItemCount > 9 ? '9+' : cartItemCount}
+                  </span>
+                )}
               </Link>
             )}
             {isAuthenticated && !isAdmin() && (
@@ -241,6 +260,10 @@ export const Navbar = () => {
                   {/* Point vert pour indiquer que l'utilisateur est connecté */}
                   <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900 z-10"></span>
                 </Link>
+                {/* Nom de l'utilisateur */}
+                <span className="text-sm text-gray-300 font-medium">
+                  {user?.username || user?.email || 'Utilisateur'}
+                </span>
                 <button
                   onClick={handleLogout}
                   className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-md text-sm font-medium transition-colors"

@@ -107,7 +107,7 @@ export const Chatbot = ({ isOpen, onClose }) => {
         message += `   📌 Type: ${pub.type}\n`;
       }
       if (pub.price && pub.price > 0) {
-        message += `   💰 Prix: ${pub.price}€\n`;
+        message += `   💰 Prix: ${pub.price} DT\n`;
       } else if (pub.price === 0 || !pub.price) {
         message += `   💰 Prix: Gratuit ou à discuter\n`;
       }
@@ -367,7 +367,7 @@ export const Chatbot = ({ isOpen, onClose }) => {
                           )}
                           {pub.price !== undefined && pub.price !== null && (
                             <p className="text-xs text-gray-600">
-                              💰 {pub.price > 0 ? `${pub.price}€` : 'Gratuit ou à discuter'}
+                              💰 {pub.price > 0 ? `${pub.price} DT` : 'Gratuit ou à discuter'}
                             </p>
                           )}
                           {pub.utilisateurUsername && (

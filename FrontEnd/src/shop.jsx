@@ -23,6 +23,7 @@ const Shop = () => {
   });
   const [processingPayment, setProcessingPayment] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     fetchVerifiedPublications();
@@ -73,6 +74,36 @@ const Shop = () => {
     setFilteredPublications(filtered);
   }, [typeFilter, searchQuery, publications]);
 
+  const handleAddToCart = async (publication) => {
+    if (!isAuthenticated || !user?.userId) {
+      alert('Veuillez vous connecter pour ajouter des articles au panier');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setAddingToCart(true);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      await axios.post(
+        `/api/cart/user/${user.userId}/items`,
+        {
+          publicationId: publication.id,
+          quantity: 1
+        },
+        { headers }
+      );
+      
+      alert(`${publication.title} a été ajouté au panier !`);
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      alert('Erreur lors de l\'ajout au panier');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
   const handleBuyClick = (publication) => {
     if (!isAuthenticated) {
       alert("Vous devez être connecté pour effectuer un paiement.");
@@ -99,7 +130,7 @@ const Shop = () => {
       //   paymentInfo: paymentInfo
       // });
 
-      alert(`Paiement de ${selectedPublication.price}€ effectué avec succès pour "${selectedPublication.title}"!`);
+      alert(`Paiement de ${selectedPublication.price} DT effectué avec succès pour "${selectedPublication.title}"!`);
       setShowPaymentModal(false);
       setSelectedPublication(null);
       setPaymentInfo({
@@ -307,14 +338,24 @@ const Shop = () => {
                   
                   <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                     <span className="text-2xl font-bold text-yellow-600">
-                      {publication.price}€
+                      {publication.price} DT
                     </span>
-                    <button
-                      onClick={() => handleBuyClick(publication)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
-                    >
-                      Acheter
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleAddToCart(publication)}
+                        disabled={addingToCart}
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                        title="Ajouter au panier"
+                      >
+                        🛒
+                      </button>
+                      <button
+                        onClick={() => handleBuyClick(publication)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                      >
+                        Acheter
+                      </button>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -330,7 +371,7 @@ const Shop = () => {
                 Paiement - {selectedPublication.title}
               </h2>
               <p className="text-gray-600 mb-2">
-                Montant: <span className="font-bold text-yellow-600">{selectedPublication.price}€</span>
+                Montant: <span className="font-bold text-yellow-600">{selectedPublication.price} DT</span>
               </p>
               
               <form onSubmit={handlePayment} className="space-y-4 mt-4">
@@ -423,7 +464,7 @@ const Shop = () => {
                     className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     disabled={processingPayment}
                   >
-                    {processingPayment ? "Traitement..." : `Payer ${selectedPublication.price}€`}
+                    {processingPayment ? "Traitement..." : `Payer ${selectedPublication.price} DT`}
                   </button>
                 </div>
               </form>

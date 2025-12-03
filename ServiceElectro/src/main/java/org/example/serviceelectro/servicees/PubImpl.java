@@ -2,7 +2,10 @@ package org.example.serviceelectro.servicees;
 
 import org.example.serviceelectro.entities.Publication;
 import org.example.serviceelectro.repository.PublicationRepository;
+import org.example.serviceelectro.repository.CommentRepository;
+import org.example.serviceelectro.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +18,15 @@ import java.util.Optional;
 public class PubImpl implements Ipub {
     @Autowired
     private PublicationRepository publicationRepository;
+
+    @Autowired(required = false)
+    private CommentRepository commentRepository;
+
+    @Autowired(required = false)
+    private NotificationRepository notificationRepository;
+
+    @Autowired(required = false)
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired(required = false)
     private AutoVerificationService autoVerificationService;
@@ -79,13 +91,88 @@ public class PubImpl implements Ipub {
     }
 
     public void deletePublication(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("L'ID de la publication ne peut pas être null");
+        }
+        
         Optional<Publication> publicationOpt = publicationRepository.findById(id);
-        if (publicationOpt.isPresent()) {
-            Publication publication = publicationOpt.get();
-
+        if (publicationOpt.isEmpty()) {
+            throw new IllegalArgumentException("Publication non trouvée avec l'ID: " + id);
+        }
+        
+        Publication publication = publicationOpt.get();
+        
+        // Supprimer manuellement les commentaires et notifications via SQL direct pour éviter les problèmes de contraintes FK
+        if (jdbcTemplate != null) {
+            try {
+                // Supprimer les commentaires via SQL direct
+                int commentsDeleted = jdbcTemplate.update("DELETE FROM comment WHERE publication_id = ?", id);
+                if (commentsDeleted > 0) {
+                    System.out.println("✅ " + commentsDeleted + " commentaire(s) supprimé(s) via SQL");
+                }
+                
+                // Supprimer les notifications via SQL direct
+                int notificationsDeleted = jdbcTemplate.update("DELETE FROM notification WHERE publication_id = ?", id);
+                if (notificationsDeleted > 0) {
+                    System.out.println("✅ " + notificationsDeleted + " notification(s) supprimée(s) via SQL");
+                }
+            } catch (Exception e) {
+                System.err.println("❌ Erreur lors de la suppression via SQL: " + e.getMessage());
+                e.printStackTrace();
+                // Essayer quand même de continuer avec les repositories JPA
+                System.err.println("⚠️ Tentative de suppression via repositories JPA...");
+                
+                // Fallback: Supprimer via repositories JPA
+                if (commentRepository != null) {
+                    try {
+                        List<org.example.serviceelectro.entities.Comment> comments = commentRepository.findByPublicationId(id);
+                        if (!comments.isEmpty()) {
+                            commentRepository.deleteAll(comments);
+                        }
+                    } catch (Exception e2) {
+                        System.err.println("⚠️ Erreur lors de la suppression des commentaires via JPA: " + e2.getMessage());
+                    }
+                }
+                
+                if (notificationRepository != null) {
+                    try {
+                        List<org.example.serviceelectro.entities.Notification> notifications = notificationRepository.findByPublication_Id(id);
+                        if (!notifications.isEmpty()) {
+                            notificationRepository.deleteAll(notifications);
+                        }
+                    } catch (Exception e2) {
+                        System.err.println("⚠️ Erreur lors de la suppression des notifications via JPA: " + e2.getMessage());
+                    }
+                }
             }
-
-        publicationRepository.deleteById(id);
+        } else {
+            // Si JdbcTemplate n'est pas disponible, utiliser les repositories JPA
+            if (commentRepository != null) {
+                try {
+                    List<org.example.serviceelectro.entities.Comment> comments = commentRepository.findByPublicationId(id);
+                    if (!comments.isEmpty()) {
+                        commentRepository.deleteAll(comments);
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Erreur lors de la suppression des commentaires: " + e.getMessage());
+                }
+            }
+            
+            if (notificationRepository != null) {
+                try {
+                    List<org.example.serviceelectro.entities.Notification> notifications = notificationRepository.findByPublication_Id(id);
+                    if (!notifications.isEmpty()) {
+                        notificationRepository.deleteAll(notifications);
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Erreur lors de la suppression des notifications: " + e.getMessage());
+                }
+            }
+        }
+        
+        // Supprimer la publication (utiliser delete() au lieu de deleteById() pour mieux gérer les relations)
+        // Laisser les exceptions se propager pour que le GlobalExceptionHandler les gère
+        publicationRepository.delete(publication);
     }
 
     public List<Publication> findByUtilisateurId(Long utilisateurId) {

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { Card } from '../components/Card';
 import { BackButton } from '../components/BackButton';
+import RecommendationForm from '../components/RecommendationForm';
 
 const Profile = () => {
   const { user, isAuthenticated } = useAuth();
@@ -272,7 +273,7 @@ const Profile = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      placeholder="Ex: +33 6 12 34 56 78"
+                      placeholder="Ex: +216 XX XXX XXX ou 0X XXX XXX"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     />
                   ) : (
@@ -365,6 +366,9 @@ const Profile = () => {
             </div>
           </div>
         </Card>
+
+        {/* Formulaire de recommandation */}
+        <RecommendationForm />
       </div>
     </div>
   );

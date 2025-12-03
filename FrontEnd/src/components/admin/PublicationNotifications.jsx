@@ -51,7 +51,7 @@ export const usePublicationNotifications = () => {
             // Notification du navigateur
             if ('Notification' in window && Notification.permission === 'granted') {
               new Notification('Nouvelle publication', {
-                body: `"${pub.title}" - ${pub.price}€`,
+                body: `"${pub.title}" - ${pub.price} DT`,
                 icon: '/favicon.ico',
                 tag: `pub-${pub.id}`,
               });

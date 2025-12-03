@@ -205,6 +205,7 @@ const HomePage = () => {
                   id="phone"
                   name="phone"
                   type="tel"
+                  placeholder="+216 XX XXX XXX ou 0X XXX XXX"
                   value={formData.phone}
                   onChange={handleChange}
                   error={formErrors.phone}

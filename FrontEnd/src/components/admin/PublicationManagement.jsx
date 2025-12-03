@@ -150,16 +150,43 @@ const PublicationManagement = () => {
   };
 
   const handleDelete = async (publicationId) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?')) {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette publication ?\n\nCette action est irréversible.')) {
       return;
     }
 
     try {
       await axios.delete(`/api/admin/publications/${publicationId}`);
-      setPublications(publications.filter((pub) => pub.id !== publicationId));
+      alert('✅ Publication supprimée avec succès');
+      fetchPublications(); // Rafraîchir la liste
     } catch (err) {
       console.error('Error deleting publication:', err);
-      alert('Erreur lors de la suppression de la publication');
+      console.error('Error response:', err.response);
+      console.error('Error response data:', err.response?.data);
+      
+      // Extraire le message d'erreur du backend
+      let errorMessage = 'Erreur lors de la suppression de la publication';
+      
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Message plus spécifique pour les erreurs 409 (Conflict)
+      if (err.response?.status === 409) {
+        const fullError = JSON.stringify(err.response?.data, null, 2);
+        console.error('Full error details:', fullError);
+        errorMessage = errorMessage || 'Impossible de supprimer cette publication car elle est liée à d\'autres données (notifications, commentaires, etc.).';
+        alert(`❌ Conflit de données (409)\n\n${errorMessage}\n\nVérifiez les logs du serveur pour plus de détails.\n\nDétails complets dans la console.`);
+      } else {
+        alert(`❌ Erreur: ${errorMessage}\n\nCode d'erreur: ${err.response?.status || 'Inconnu'}`);
+      }
     }
   };
 
@@ -639,7 +666,7 @@ const PublicationManagement = () => {
                       placeholder="Nouveau prix"
                       autoFocus
                     />
-                    <span className="text-lg font-semibold text-gray-700">€</span>
+                    <span className="text-lg font-semibold text-gray-700">DT</span>
                     <button
                       onClick={() => handlePriceChange(publication.id, editingPriceValue)}
                       className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm"
@@ -658,7 +685,7 @@ const PublicationManagement = () => {
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2 flex-1">
-                    <span className="text-2xl font-bold text-yellow-600">{publication.price}€</span>
+                    <span className="text-2xl font-bold text-yellow-600">{publication.price} DT</span>
                     <button
                       onClick={() => {
                         setEditingPrice(publication.id);

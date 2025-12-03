@@ -40,16 +40,22 @@ public class SecurityConfig {
                         .requestMatchers("/api/utilis/profile/**").permitAll() // Allow public profile access (includes photos)
                         .requestMatchers("/api/utilis/{id}").permitAll() // Allow public user info access
                         .requestMatchers("/api/pub/files/**").permitAll()
+                        .requestMatchers("/api/messages/files/**").permitAll()
                         .requestMatchers("/api/pub").permitAll()
                         .requestMatchers("/api/pub/{id}").permitAll()
                         .requestMatchers("/api/pub/create").permitAll()
                         .requestMatchers("/api/comments/publication/**").permitAll()
+                        .requestMatchers("/api/recommendations/stats").permitAll() // Stats publiques
                         
                         // Messages endpoints - require authentication
                         .requestMatchers("/api/messages/**").authenticated()
                         
                         // Notifications endpoints - require authentication
                         .requestMatchers("/api/notifications/**").authenticated()
+                        
+                        // Cart and Recommendations endpoints - require authentication
+                        .requestMatchers("/api/cart/**").authenticated()
+                        .requestMatchers("/api/recommendations/**").authenticated()
                         
                         // Admin endpoints - require ADMIN role
                         .requestMatchers("/api/pub/admin/**").hasRole("ADMIN")

@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
+import Cart from "./pages/Cart";
 import { Layout } from "./shared/layout";
 
 function App() {
@@ -57,6 +58,14 @@ function App() {
                   <Route
                     path="/user/:userId"
                     element={<UserProfile />}
+                  />
+                  <Route
+                    path="/cart"
+                    element={
+                      <ProtectedRoute>
+                        <Cart />
+                      </ProtectedRoute>
+                    }
                   />
                 </Routes>
               </Layout>

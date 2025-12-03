@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Card } from '../components/Card';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/BackButton';
+import EmojiPicker from '../components/EmojiPicker';
 
 const Messages = () => {
   const { user, isAuthenticated } = useAuth();
@@ -14,6 +15,12 @@ const Messages = () => {
   const [sending, setSending] = useState(false);
   const [adminId, setAdminId] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const fileInputRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -33,6 +40,11 @@ const Messages = () => {
       return () => clearInterval(interval);
     }
   }, [adminId, user?.userId]);
+
+  // Scroll vers le bas quand de nouveaux messages arrivent
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const findAdminId = async () => {
     try {
@@ -117,29 +129,175 @@ const Messages = () => {
     }
   };
 
+  const handleEmojiSelect = (emoji) => {
+    setNewMessage(prev => prev + emoji);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Le fichier ne doit pas dépasser 10MB');
+        return;
+      }
+      setSelectedFile(file);
+      
+      // Prévisualisation pour les images
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFilePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('La géolocalisation n\'est pas supportée par votre navigateur');
+      return;
+    }
+
+    setGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setGettingLocation(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        alert('Impossible d\'obtenir votre localisation');
+        setGettingLocation(false);
+      }
+    );
+  };
+
+  const removeLocation = () => {
+    setLocation(null);
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      await axios.delete(`/api/messages/${messageId}?userId=${user.userId}`, { headers });
+      await fetchConversation();
+    } catch (err) {
+      console.error('Error deleting message:', err);
+      alert('Erreur lors de la suppression du message');
+    }
+  };
+
+  const handleDeleteMultipleMessages = async (messageIds) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer ${messageIds.length} message(s) ?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      await axios.delete('/api/messages/bulk', {
+        data: {
+          messageIds,
+          userId: user.userId
+        },
+        headers
+      });
+      await fetchConversation();
+    } catch (err) {
+      console.error('Error deleting messages:', err);
+      alert('Erreur lors de la suppression des messages');
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !adminId || !user?.userId) {
+    
+    const hasContent = newMessage.trim().length > 0;
+    const hasFile = selectedFile !== null;
+    const hasLocation = location !== null;
+    
+    if (!hasContent && !hasFile && !hasLocation) {
+      alert('Veuillez ajouter du texte, un fichier ou une localisation');
+      return;
+    }
+
+    if (!adminId || !user?.userId) {
       alert('Veuillez remplir tous les champs nécessaires');
       return;
     }
 
     try {
       setSending(true);
+      
+      let fileUrl = null;
+      let fileName = null;
+      let fileType = null;
+      
+      // Upload du fichier si présent
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        headers['Content-Type'] = 'multipart/form-data';
+        
+        const fileResponse = await axios.post('/api/messages/upload-file', formData, { headers });
+        fileUrl = fileResponse.data.fileUrl;
+        fileName = fileResponse.data.fileName;
+        fileType = fileResponse.data.fileType;
+      }
+      
       console.log('📤 Sending message:', {
-        content: newMessage,
+        content: newMessage.trim() || null,
         senderId: user.userId,
-        receiverId: adminId
+        receiverId: adminId,
+        fileUrl,
+        latitude: location?.latitude,
+        longitude: location?.longitude
       });
       
       const response = await axios.post('/api/messages', {
-        content: newMessage.trim(),
+        content: newMessage.trim() || null,
         senderId: user.userId,
         receiverId: adminId,
+        fileUrl,
+        fileName,
+        fileType,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
+        locationName: location ? `Lat: ${location.latitude.toFixed(6)}, Lng: ${location.longitude.toFixed(6)}` : null,
       });
       
       console.log('✅ Message sent successfully:', response.data);
       setNewMessage('');
+      setSelectedFile(null);
+      setFilePreview(null);
+      setLocation(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       setError(null);
       await fetchConversation();
     } catch (err) {
@@ -236,54 +394,201 @@ const Messages = () => {
                 Aucun message. Commencez la conversation !
               </p>
             ) : (
-              messages.map((message) => {
+              <>
+                {messages.filter(m => m.senderId === user.userId || m.receiverId === user.userId).length > 0 && (
+                  <div className="mb-2 flex justify-end">
+                    <button
+                      onClick={() => {
+                        const userMessageIds = messages
+                          .filter(m => m.senderId === user.userId || m.receiverId === user.userId)
+                          .map(m => m.id);
+                        if (userMessageIds.length > 0) {
+                          handleDeleteMultipleMessages(userMessageIds);
+                        }
+                      }}
+                      className="text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Supprimer tous mes messages
+                    </button>
+                  </div>
+                )}
+                {messages.map((message) => {
                 const isUser = message.senderId === user.userId;
                 const senderId = isUser ? user.userId : adminId;
+                const canDelete = message.senderId === user.userId || message.receiverId === user.userId;
                 return (
                   <div
                     key={message.id}
                     className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
+                      className={`max-w-[70%] rounded-lg p-3 relative ${
                         isUser
                           ? 'bg-yellow-500 text-black'
                           : 'bg-gray-200 text-gray-900'
                       }`}
                     >
-                      <p 
-                        className="text-xs font-semibold mb-1 cursor-pointer hover:underline"
-                        onClick={() => senderId && navigate(`/user/${senderId}`)}
-                        title="Voir le profil"
-                      >
-                        {isUser ? (user?.username || user?.email || 'Vous') : 'Fixer'}
-                      </p>
-                      <p className="text-sm">{message.content}</p>
-                      <p className="text-xs mt-1 opacity-70">
-                        {new Date(message.createdAt).toLocaleString('fr-FR')}
-                      </p>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p 
+                            className="text-xs font-semibold mb-1 cursor-pointer hover:underline"
+                            onClick={() => senderId && navigate(`/user/${senderId}`)}
+                            title="Voir le profil"
+                          >
+                            {isUser ? (user?.username || user?.email || 'Vous') : 'Fixer'}
+                          </p>
+                      {message.content && (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      )}
+                      
+                      {/* Fichier attaché */}
+                      {message.fileUrl && (
+                        <div className="mt-2">
+                          {message.fileType?.startsWith('image/') ? (
+                            <img
+                              src={`http://localhost:9090${message.fileUrl}`}
+                              alt={message.fileName || 'Image'}
+                              className="max-w-full h-auto rounded-lg cursor-pointer"
+                              onClick={() => window.open(`http://localhost:9090${message.fileUrl}`, '_blank')}
+                            />
+                          ) : (
+                            <a
+                              href={`http://localhost:9090${message.fileUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                            >
+                              📎 {message.fileName || 'Fichier'}
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Localisation */}
+                      {message.latitude && message.longitude && (
+                        <div className="mt-2">
+                          <a
+                            href={`https://www.google.com/maps?q=${message.latitude},${message.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                          >
+                            📍 {message.locationName || 'Localisation'}
+                          </a>
+                        </div>
+                      )}
+                      
+                          <p className="text-xs mt-1 opacity-70">
+                            {new Date(message.createdAt).toLocaleString('fr-FR')}
+                          </p>
+                        </div>
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDeleteMessage(message.id)}
+                            className="text-red-500 hover:text-red-700 text-sm ml-2"
+                            title="Supprimer ce message"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
-              })
+              })}
+              </>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Formulaire d'envoi */}
           {adminId && (
             <form onSubmit={handleSendMessage}>
+              {/* Prévisualisation du fichier */}
+              {filePreview && (
+                <div className="mb-2 relative inline-block">
+                  <img
+                    src={filePreview}
+                    alt="Preview"
+                    className="max-w-xs h-auto rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              
+              {/* Fichier sélectionné (non-image) */}
+              {selectedFile && !filePreview && (
+                <div className="mb-2 flex items-center gap-2 p-2 bg-gray-100 rounded-lg">
+                  <span>📎 {selectedFile.name}</span>
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              
+              {/* Localisation sélectionnée */}
+              {location && (
+                <div className="mb-2 flex items-center gap-2 p-2 bg-blue-100 rounded-lg">
+                  <span>📍 Localisation: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</span>
+                  <button
+                    type="button"
+                    onClick={removeLocation}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Tapez votre message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                  disabled={sending || !adminId}
-                />
+                <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-2">
+                  <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Tapez votre message..."
+                    className="flex-1 px-2 py-2 focus:outline-none"
+                    disabled={sending || !adminId}
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="file-input"
+                    accept="image/*,application/pdf,.doc,.docx"
+                  />
+                  <label
+                    htmlFor="file-input"
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded cursor-pointer transition-colors"
+                    title="Ajouter un fichier"
+                  >
+                    📎
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    disabled={gettingLocation}
+                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                    title="Ajouter ma localisation"
+                  >
+                    {gettingLocation ? '⏳' : '📍'}
+                  </button>
+                </div>
                 <button
                   type="submit"
-                  disabled={sending || !newMessage.trim() || !adminId}
+                  disabled={sending || (!newMessage.trim() && !selectedFile && !location) || !adminId}
                   className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {sending ? 'Envoi...' : 'Envoyer'}

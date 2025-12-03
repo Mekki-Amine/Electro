@@ -112,10 +112,17 @@ function Pup() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewPublication((prevState) => ({
-      ...prevState,
-      [name]: name === "price" ? parseFloat(value) || 0 : value,
-    }));
+    setNewPublication((prevState) => {
+      const updatedState = {
+        ...prevState,
+        [name]: name === "price" ? parseFloat(value) || 0 : value,
+      };
+      // Si le type change et n'est plus "Vente", réinitialiser le prix à 0
+      if (name === "type" && value !== "Vente") {
+        updatedState.price = 0;
+      }
+      return updatedState;
+    });
   };
 
   const handleFileChange = (e) => {
@@ -192,6 +199,12 @@ function Pup() {
       return;
     }
     
+    // Validation : le prix est requis uniquement pour les ventes
+    if (newPublication.type === 'Vente' && (!newPublication.price || newPublication.price <= 0)) {
+      setError("Le prix est requis pour les publications de type Vente.");
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitSuccess(false);
     setError(null);
@@ -201,7 +214,8 @@ function Pup() {
     formData.append('title', newPublication.title);
     formData.append('description', newPublication.description);
     formData.append('type', newPublication.type);
-    formData.append('price', newPublication.price);
+    // Le prix est requis uniquement pour les ventes, sinon 0
+    formData.append('price', newPublication.type === 'Vente' ? newPublication.price : 0);
     // Ajouter utilisateurId seulement si l'utilisateur est connecté
     if (isAuthenticated && user?.userId) {
       formData.append('utilisateurId', user.userId);
@@ -430,18 +444,21 @@ function Pup() {
                 </select>
               </div>
 
-              <Input
-                label="Prix (€)"
-                id="price"
-                name="price"
-                type="number"
-                placeholder="0"
-                value={newPublication.price}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                required
-              />
+              {/* Prix - requis uniquement pour les ventes */}
+              {newPublication.type === 'Vente' && (
+                <Input
+                  label="Prix (DT) *"
+                  id="price"
+                  name="price"
+                  type="number"
+                  placeholder="0.00"
+                  value={newPublication.price}
+                  onChange={handleChange}
+                  min="0.01"
+                  step="0.01"
+                  required
+                />
+              )}
 
               {/* File Upload Section */}
               <div className="mb-4">
@@ -666,7 +683,7 @@ function Pup() {
                   
                   <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                     <span className="text-2xl font-bold text-yellow-600">
-                      {publication.price}€
+                      {publication.price} DT
                     </span>
                     <span className="text-sm text-gray-500">
                       #{publication.id}

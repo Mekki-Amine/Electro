@@ -1,6 +1,5 @@
 package org.example.serviceelectro.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +15,6 @@ import java.time.LocalDateTime;
 public class MessageDTO {
     private Long id;
 
-    @NotBlank(message = "Le contenu du message est requis")
     private String content;
 
     @NotNull(message = "L'ID de l'expéditeur est requis")
@@ -30,6 +28,15 @@ public class MessageDTO {
     private String receiverEmail;
 
     private Boolean isRead;
+    
+    private String fileUrl;
+    private String fileName;
+    private String fileType;
+    
+    private Double latitude;
+    private Double longitude;
+    private String locationName;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

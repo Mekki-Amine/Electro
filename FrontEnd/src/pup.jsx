@@ -69,6 +69,7 @@ function Pup() {
   const [filePreview, setFilePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchPublications();
@@ -246,6 +247,7 @@ function Pup() {
         setFilePreview(null);
         setSubmitSuccess(true);
         setTimeout(() => setSubmitSuccess(false), 8000); // Afficher le message plus longtemps
+        setShowModal(false); // Fermer la modale après succès
       })
       .catch((error) => {
         console.error("Error creating publication:", error);
@@ -372,175 +374,213 @@ function Pup() {
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto mb-12">
-          <Card>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Publier une nouvelle annonce
-            </h2>
-            {submitSuccess && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-300 text-blue-800 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <span className="text-2xl">✅</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold mb-1">Publication créée avec succès !</p>
-                    <p className="text-sm">
-                      Votre publication sera examinée par Fixer avant d'être publiée. 
-                      Vous serez notifié une fois qu'elle sera approuvée et visible sur le site.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            {error && (
-              <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                {error}
-              </div>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                label="Titre"
-                id="title"
-                name="title"
-                type="text"
-                placeholder="Titre de votre annonce"
-                value={newPublication.title}
-                onChange={handleChange}
-                required
-              />
-
-              <Textarea
-                label="Description"
-                id="description"
-                name="description"
-                placeholder="Description détaillée..."
-                value={newPublication.description}
-                onChange={handleChange}
-                required
-                rows={5}
-              />
-
-              <div className="mb-4">
-                <label
-                  htmlFor="type"
-                  className="block text-sm font-semibold mb-2 text-gray-800"
-                >
-                  Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="type"
-                  name="type"
-                  value={newPublication.type}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
-                >
-                  <option value="Reparation">Réparation</option>
-                  <option value="Achat">Achat</option>
-                  <option value="Vente">Vente</option>
-                  <option value="exchange">Échange</option>
-                  <option value="donation">Donation</option>
-                  <option value="other">Autre</option>
-                </select>
-              </div>
-
-              {/* Prix - requis uniquement pour les ventes */}
-              {newPublication.type === 'Vente' && (
-                <Input
-                  label="Prix (DT) *"
-                  id="price"
-                  name="price"
-                  type="number"
-                  placeholder="0.00"
-                  value={newPublication.price}
-                  onChange={handleChange}
-                  min="0.01"
-                  step="0.01"
-                  required
-                />
-              )}
-
-              {/* File Upload Section */}
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-2 text-gray-800">
-                  Image ou Document (optionnel)
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
-                  <input
-                    type="file"
-                    id="file"
-                    onChange={handleFileChange}
-                    accept="image/jpeg,image/png,image/jpg,image/gif,application/pdf"
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="file"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    {!selectedFile ? (
-                      <>
-                        <svg
-                          className="w-12 h-12 text-gray-400 mb-3"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                        <span className="text-gray-600 font-medium">
-                          Cliquez pour télécharger
-                        </span>
-                        <span className="text-sm text-gray-500 mt-1">
-                          PNG, JPG, GIF ou PDF (max. 10MB)
-                        </span>
-                      </>
-                    ) : (
-                      <div className="w-full">
-                        {filePreview ? (
-                          <img
-                            src={filePreview}
-                            alt="Preview"
-                            className="max-h-48 mx-auto rounded-lg mb-3"
-                          />
-                        ) : (
-                          <div className="text-4xl mb-3">📄</div>
-                        )}
-                        <p className="text-gray-700 font-medium mb-2">
-                          {selectedFile.name}
-                        </p>
-                        <p className="text-sm text-gray-500 mb-3">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                        <button
-                          type="button"
-                          onClick={handleRemoveFile}
-                          className="text-red-600 hover:text-red-800 font-medium text-sm"
-                        >
-                          Supprimer le fichier
-                        </button>
-                      </div>
-                    )}
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-center">
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full md:w-auto min-w-[150px]"
-                >
-                  {isSubmitting ? "Publication..." : "Publier"}
-                </Button>
-              </div>
-            </form>
-          </Card>
+        <div className="max-w-2xl mx-auto mb-12 text-center">
+          <Button
+            onClick={() => setShowModal(true)}
+            className="w-full md:w-auto"
+          >
+            Ajouter un appareil
+          </Button>
         </div>
+
+        {/* Modale */}
+        {showModal && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowModal(false);
+                setError(null);
+                setSubmitSuccess(false);
+              }
+            }}
+          >
+            <div 
+              className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Publier une nouvelle annonce
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setError(null);
+                    setSubmitSuccess(false);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="p-6">
+                {submitSuccess && (
+                  <div className="mb-4 p-4 bg-blue-50 border border-blue-300 text-blue-800 rounded-lg">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <span className="text-2xl">✅</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold mb-1">Publication créée avec succès !</p>
+                        <p className="text-sm">
+                          Votre publication sera examinée par Fixer avant d'être publiée. 
+                          Vous serez notifié une fois qu'elle sera approuvée et visible sur le site.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {error && (
+                  <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    {error}
+                  </div>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <Input
+                    label="Titre"
+                    id="title"
+                    name="title"
+                    type="text"
+                    placeholder="Titre de votre annonce"
+                    value={newPublication.title}
+                    onChange={handleChange}
+                    required
+                  />
+
+                  <Textarea
+                    label="Description"
+                    id="description"
+                    name="description"
+                    placeholder="Description détaillée..."
+                    value={newPublication.description}
+                    onChange={handleChange}
+                    required
+                    rows={5}
+                  />
+
+                  <div className="mb-4">
+                    <label
+                      htmlFor="type"
+                      className="block text-sm font-semibold mb-2 text-gray-800"
+                    >
+                      Type <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="type"
+                      name="type"
+                      value={newPublication.type}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200"
+                    >
+                      <option value="Reparation">Réparation</option>
+                      <option value="Achat">Achat</option>
+                      <option value="Vente">Vente</option>
+                      <option value="exchange">Échange</option>
+                      <option value="donation">Donation</option>
+                      <option value="other">Autre</option>
+                    </select>
+                  </div>
+
+                  {/* Prix - requis uniquement pour les ventes */}
+                  {newPublication.type === 'Vente' && (
+                    <Input
+                      label="Prix (DT) *"
+                      id="price"
+                      name="price"
+                      type="number"
+                      placeholder="0.00"
+                      value={newPublication.price}
+                      onChange={handleChange}
+                      min="0.01"
+                      step="0.01"
+                      required
+                    />
+                  )}
+
+                  {/* File Upload Section */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold mb-2 text-gray-800">
+                      Image ou Document (optionnel)
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 transition-colors">
+                      <input
+                        type="file"
+                        id="file"
+                        onChange={handleFileChange}
+                        accept="image/jpeg,image/png,image/jpg,image/gif,application/pdf"
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="file"
+                        className="cursor-pointer flex flex-col items-center"
+                      >
+                        {!selectedFile ? (
+                          <>
+                            <svg
+                              className="w-12 h-12 text-gray-400 mb-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                              />
+                            </svg>
+                            <span className="text-gray-600 font-medium">
+                              Cliquez pour télécharger
+                            </span>
+                            <span className="text-sm text-gray-500 mt-1">
+                              PNG, JPG, GIF ou PDF (max. 10MB)
+                            </span>
+                          </>
+                        ) : (
+                          <div className="w-full">
+                            {filePreview ? (
+                              <img
+                                src={filePreview}
+                                alt="Preview"
+                                className="max-h-48 mx-auto rounded-lg mb-3"
+                              />
+                            ) : (
+                              <div className="text-4xl mb-3">📄</div>
+                            )}
+                            <p className="text-gray-700 font-medium mb-2">
+                              {selectedFile.name}
+                            </p>
+                            <p className="text-sm text-gray-500 mb-3">
+                              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleRemoveFile}
+                              className="text-red-600 hover:text-red-800 font-medium text-sm"
+                            >
+                              Supprimer le fichier
+                            </button>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full md:w-auto min-w-[150px]"
+                    >
+                      {isSubmitting ? "Publication..." : "Publier"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">

@@ -10,6 +10,7 @@ const UserManagement = () => {
   const [error, setError] = useState(null);
   const [expandedUsers, setExpandedUsers] = useState(new Set());
   const [copiedPassword, setCopiedPassword] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -117,7 +118,22 @@ const UserManagement = () => {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Gestion des Utilisateurs</h2>
-          <p className="text-gray-600">Total: {users.length} utilisateur(s)</p>
+          <p className="text-gray-600">
+            Total: {users.length} utilisateur(s)
+            {searchQuery && (
+              <span className="ml-2 text-yellow-600">
+                ({users.filter((u) => {
+                  const query = searchQuery.toLowerCase();
+                  return (
+                    (u.username && u.username.toLowerCase().includes(query)) ||
+                    (u.email && u.email.toLowerCase().includes(query)) ||
+                    (u.id && u.id.toString().includes(query)) ||
+                    (u.role && u.role.toLowerCase().includes(query))
+                  );
+                }).length} résultat(s))
+              </span>
+            )}
+          </p>
         </div>
         <button
           onClick={fetchUsers}
@@ -127,13 +143,49 @@ const UserManagement = () => {
         </button>
       </div>
 
+      {/* Champ de recherche */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Rechercher par nom, email, ID ou rôle..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
-        {users.length === 0 ? (
-          <Card className="text-center py-12">
-            <p className="text-gray-600">Aucun utilisateur trouvé</p>
-          </Card>
-        ) : (
-          users.map((user) => (
+        {(() => {
+          const filteredUsers = users.filter((user) => {
+            if (!searchQuery.trim()) return true;
+            const query = searchQuery.toLowerCase();
+            return (
+              (user.username && user.username.toLowerCase().includes(query)) ||
+              (user.email && user.email.toLowerCase().includes(query)) ||
+              (user.id && user.id.toString().includes(query)) ||
+              (user.role && user.role.toLowerCase().includes(query))
+            );
+          });
+          
+          if (users.length === 0) {
+            return (
+              <Card className="text-center py-12">
+                <p className="text-gray-600">Aucun utilisateur trouvé</p>
+              </Card>
+            );
+          }
+          
+          if (filteredUsers.length === 0) {
+            return (
+              <Card className="text-center py-12">
+                <p className="text-gray-600">
+                  Aucun utilisateur trouvé pour "{searchQuery}"
+                </p>
+              </Card>
+            );
+          }
+          
+          return filteredUsers.map((user) => (
             <Card key={user.id} className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -249,8 +301,8 @@ const UserManagement = () => {
                 </div>
               </div>
             </Card>
-          ))
-        )}
+          ));
+        })()}
       </div>
     </div>
   );

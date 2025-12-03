@@ -1,6 +1,7 @@
 package org.example.serviceelectro.servicees;
 
 import org.example.serviceelectro.entities.Message;
+import org.example.serviceelectro.entities.Notification;
 import org.example.serviceelectro.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,9 @@ public class MessageImpl implements Imessage {
 
     @Autowired
     private MessageRepository messageRepository;
+
+    @Autowired(required = false)
+    private INotification notificationService;
 
     @Override
     public List<Message> getAllMessages() {
@@ -45,6 +49,39 @@ public class MessageImpl implements Imessage {
             
             Message saved = messageRepository.save(message);
             System.out.println("✅ Message saved with ID: " + saved.getId());
+            
+            // Créer une notification pour le destinataire
+            if (saved.getReceiver() != null) {
+                if (notificationService == null) {
+                    System.out.println("⚠️ NotificationService is null - notifications will not be created");
+                } else {
+                    try {
+                        String senderName = saved.getSender().getRealUsername() != null 
+                            ? saved.getSender().getRealUsername() 
+                            : saved.getSender().getEmail();
+                        String messagePreview = saved.getContent().length() > 50 
+                            ? saved.getContent().substring(0, 50) + "..." 
+                            : saved.getContent();
+                        String notificationMessage = String.format("Nouveau message de %s: %s", senderName, messagePreview);
+                        
+                        System.out.println("🔔 Creating notification for receiver ID: " + saved.getReceiver().getId());
+                        Notification notification = notificationService.createNotification(
+                            saved.getReceiver().getId(),
+                            notificationMessage,
+                            "NEW_MESSAGE",
+                            null // Pas de publication associée
+                        );
+                        System.out.println("✅ Notification created successfully with ID: " + notification.getId());
+                    } catch (Exception e) {
+                        // Ne pas faire échouer l'envoi du message si la notification échoue
+                        System.err.println("❌ Erreur lors de la création de la notification de message: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                System.out.println("⚠️ Receiver is null - cannot create notification");
+            }
+            
             return saved;
         } catch (Exception e) {
             System.out.println("❌ Error saving message: " + e.getMessage());

@@ -33,6 +33,8 @@ public class PublicationDTO {
     private String status;
 
     private Boolean verified;
+    private Boolean inCatalog;
+    private Boolean inPublications;
     private Long verifiedBy;
     private LocalDateTime verifiedAt;
 

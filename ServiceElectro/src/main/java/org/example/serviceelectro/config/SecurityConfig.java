@@ -48,6 +48,9 @@ public class SecurityConfig {
                         // Messages endpoints - require authentication
                         .requestMatchers("/api/messages/**").authenticated()
                         
+                        // Notifications endpoints - require authentication
+                        .requestMatchers("/api/notifications/**").authenticated()
+                        
                         // Admin endpoints - require ADMIN role
                         .requestMatchers("/api/pub/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")

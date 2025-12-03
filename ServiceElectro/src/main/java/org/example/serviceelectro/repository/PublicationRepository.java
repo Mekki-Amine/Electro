@@ -24,4 +24,6 @@ public interface PublicationRepository extends JpaRepository<Publication, Long> 
     List<Publication> findByVerifiedTrue();
     List<Publication> findByVerifiedFalse();
     List<Publication> findByStatus(String status);
+    List<Publication> findByVerifiedTrueAndInCatalogTrue(); // Pour le catalogue (/shop)
+    List<Publication> findByVerifiedTrueAndInPublicationsTrue(); // Pour les publications (/publications)
 }

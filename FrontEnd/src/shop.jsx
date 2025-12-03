@@ -8,10 +8,13 @@ import { BackButton } from "./components/BackButton";
 const Shop = () => {
   const navigate = useNavigate();
   const [publications, setPublications] = useState([]);
+  const [filteredPublications, setFilteredPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPublication, setSelectedPublication] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: "",
     cardHolder: "",
@@ -40,6 +43,7 @@ const Shop = () => {
         });
       });
       setPublications(response.data);
+      setFilteredPublications(response.data);
       setError(null);
     } catch (err) {
       console.error("Error fetching publications:", err);
@@ -48,6 +52,26 @@ const Shop = () => {
       setLoading(false);
     }
   };
+
+  // Filtrer les publications par type et par nom
+  useEffect(() => {
+    let filtered = publications;
+    
+    // Filtrer par type
+    if (typeFilter !== '') {
+      filtered = filtered.filter(pub => pub.type === typeFilter);
+    }
+    
+    // Filtrer par nom/titre
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(pub => 
+        pub.title && pub.title.toLowerCase().includes(query)
+      );
+    }
+    
+    setFilteredPublications(filtered);
+  }, [typeFilter, searchQuery, publications]);
 
   const handleBuyClick = (publication) => {
     if (!isAuthenticated) {
@@ -114,9 +138,47 @@ const Shop = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Notre Catalogue
           </h1>
-          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-700 max-w-2xl mx-auto mb-6">
             Découvrez notre sélection de produits et services vérifiés pour tous vos besoins en réparation
           </p>
+          
+          {/* Recherche et filtres */}
+          <div className="max-w-2xl mx-auto space-y-4">
+            {/* Recherche par nom */}
+            <div>
+              <input
+                type="text"
+                placeholder="Rechercher par nom de publication..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              />
+            </div>
+            
+            {/* Filtre par type */}
+            <div>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              >
+                <option value="">Tous les types</option>
+                <option value="Reparation">Réparation</option>
+                <option value="Achat">Achat</option>
+                <option value="Vente">Vente</option>
+                <option value="exchange">Échange</option>
+                <option value="donation">Donation</option>
+              </select>
+            </div>
+            
+            {(typeFilter || searchQuery.trim()) && (
+              <p className="text-sm text-gray-600 text-center">
+                {filteredPublications.length} publication{filteredPublications.length > 1 ? 's' : ''} trouvée{filteredPublications.length > 1 ? 's' : ''}
+                {typeFilter && ` (type: ${typeFilter})`}
+                {searchQuery.trim() && ` (recherche: "${searchQuery}")`}
+              </p>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -134,16 +196,31 @@ const Shop = () => {
               Réessayer
             </button>
           </Card>
-        ) : publications.length === 0 ? (
+        ) : filteredPublications.length === 0 ? (
           <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
               <div className="text-6xl mb-4">📦</div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                Aucune publication disponible pour le moment
+                {(typeFilter || searchQuery.trim()) 
+                  ? 'Aucune publication trouvée' 
+                  : 'Aucune publication disponible pour le moment'}
               </h2>
               <p className="text-gray-600 mb-6">
-                Le catalogue sera bientôt rempli. En attendant, n'hésitez pas à nous contacter pour vos besoins spécifiques.
+                {(typeFilter || searchQuery.trim())
+                  ? 'Essayez de modifier vos critères de recherche ou consultez toutes les publications.'
+                  : 'Le catalogue sera bientôt rempli. En attendant, n\'hésitez pas à nous contacter pour vos besoins spécifiques.'}
               </p>
+              {(typeFilter || searchQuery.trim()) && (
+                <button
+                  onClick={() => {
+                    setTypeFilter('');
+                    setSearchQuery('');
+                  }}
+                  className="inline-block bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors duration-200 mr-4"
+                >
+                  Voir toutes les publications
+                </button>
+              )}
               <a
                 href="/contact"
                 className="inline-block bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors duration-200"
@@ -154,7 +231,7 @@ const Shop = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {publications.map((publication) => (
+            {filteredPublications.map((publication) => (
               <Card key={publication.id} hover className="flex flex-col">
                 {/* Propriétaire */}
                 {(publication.utilisateurId || publication.utilisateurUsername || publication.utilisateurEmail) && (

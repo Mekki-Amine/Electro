@@ -3,6 +3,7 @@ import { Button } from "./components/Button";
 import { Input } from "./components/Input";
 import { Textarea } from "./components/Textarea";
 import { Card } from "./components/Card";
+import { Chatbot } from "./components/Chatbot";
 
 const HomePage = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ const HomePage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -114,7 +116,11 @@ const HomePage = () => {
               </p>
             </Card>
 
-            <Card hover className="text-center">
+            <Card 
+              hover 
+              className="text-center cursor-pointer"
+              onClick={() => setIsChatbotOpen(true)}
+            >
               <div className="text-4xl mb-4">💬</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Service clientèle
@@ -273,9 +279,10 @@ const HomePage = () => {
             </Card>
           </div>
         </section>
-      </main>
-    </div>
-  );
+      </main>
+      <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} />
+    </div>
+  );
 };
 
 export default HomePage;

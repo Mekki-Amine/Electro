@@ -14,6 +14,7 @@ const MessageManagement = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [adminId, setAdminId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchUsersWithConversations();
@@ -145,12 +146,47 @@ const MessageManagement = () => {
       <div className="flex gap-6 h-[600px]">
         {/* Liste des utilisateurs */}
         <div className="w-1/3 border-r border-gray-200 pr-4">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Conversations</h2>
-          <div className="space-y-2 overflow-y-auto max-h-[550px]">
-            {users.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">Aucune conversation</p>
-            ) : (
-              users.map((u) => (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Conversations</h2>
+          </div>
+          
+          {/* Champ de recherche */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Rechercher un utilisateur..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            />
+          </div>
+          
+          <div className="space-y-2 overflow-y-auto max-h-[500px]">
+            {(() => {
+              const filteredUsers = users.filter((u) => {
+                if (!searchQuery.trim()) return true;
+                const query = searchQuery.toLowerCase();
+                return (
+                  (u.username && u.username.toLowerCase().includes(query)) ||
+                  (u.email && u.email.toLowerCase().includes(query)) ||
+                  (u.id && u.id.toString().includes(query))
+                );
+              });
+              
+              if (users.length === 0) {
+                return <p className="text-gray-500 text-center py-8">Aucune conversation</p>;
+              }
+              
+              if (filteredUsers.length === 0) {
+                return (
+                  <p className="text-gray-500 text-center py-8">
+                    Aucun utilisateur trouvé pour "{searchQuery}"
+                  </p>
+                );
+              }
+              
+              return filteredUsers.map((u) => {
+                return (
                 <Card
                   key={u.id}
                   className={`p-4 transition-colors ${
@@ -211,8 +247,9 @@ const MessageManagement = () => {
                     </div>
                   </div>
                 </Card>
-              ))
-            )}
+                );
+              });
+            })()}
           </div>
         </div>
 

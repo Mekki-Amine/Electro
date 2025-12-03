@@ -19,11 +19,19 @@ public class PubImpl implements Ipub {
     @Autowired(required = false)
     private AutoVerificationService autoVerificationService;
 
+    @Autowired(required = false)
+    private INotification notificationService;
+
 
     @Override
     public List<Publication> getAllPublications() {
-        // Retourne uniquement les publications vérifiées pour le public
-        return publicationRepository.findByVerifiedTrue();
+        // Retourne uniquement les publications vérifiées ET dans le catalogue pour /shop
+        return publicationRepository.findByVerifiedTrueAndInCatalogTrue();
+    }
+
+    public List<Publication> getPublicationsForPublicationsPage() {
+        // Retourne les publications vérifiées ET dans les publications pour /publications
+        return publicationRepository.findByVerifiedTrueAndInPublicationsTrue();
     }
 
     public List<Publication> getAllPublicationsIncludingUnverified() {
@@ -100,7 +108,94 @@ public class PubImpl implements Ipub {
         publication.setVerifiedBy(adminId);
         publication.setVerifiedAt(LocalDateTime.now());
 
-        return publicationRepository.save(publication);
+        Publication savedPublication = publicationRepository.save(publication);
+
+        // Créer une notification pour l'utilisateur propriétaire de la publication
+        if (notificationService != null && savedPublication.getUtilisateur() != null) {
+            try {
+                String message = String.format("Votre publication \"%s\" a été approuvée et est maintenant visible sur le site.", 
+                    savedPublication.getTitle());
+                notificationService.createNotification(
+                    savedPublication.getUtilisateur().getId(),
+                    message,
+                    "PUBLICATION_APPROVED",
+                    savedPublication.getId()
+                );
+            } catch (Exception e) {
+                // Ne pas faire échouer la vérification si la notification échoue
+                System.err.println("Erreur lors de la création de la notification: " + e.getMessage());
+            }
+        }
+
+        return savedPublication;
+    }
+
+    public Publication setPublicationInCatalog(Long publicationId, Boolean inCatalog) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        // Si la publication n'est pas vérifiée, la vérifier d'abord
+        if (!publication.getVerified()) {
+            publication.setVerified(true);
+            publication.setVerifiedBy(null); // Vérification automatique
+            publication.setVerifiedAt(LocalDateTime.now());
+        }
+
+        boolean wasInCatalog = publication.getInCatalog() != null && publication.getInCatalog();
+        publication.setInCatalog(inCatalog);
+        Publication savedPublication = publicationRepository.save(publication);
+
+        // Créer une notification si la publication est mise au catalogue (changement d'état de false à true)
+        if (notificationService != null && savedPublication.getUtilisateur() != null && inCatalog && !wasInCatalog) {
+            try {
+                String message = String.format("Votre publication \"%s\" a été ajoutée au catalogue et est maintenant visible sur la page du catalogue.", 
+                    savedPublication.getTitle());
+                notificationService.createNotification(
+                    savedPublication.getUtilisateur().getId(),
+                    message,
+                    "PUBLICATION_IN_CATALOG",
+                    savedPublication.getId()
+                );
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la création de la notification: " + e.getMessage());
+            }
+        }
+
+        return savedPublication;
+    }
+
+    public Publication setPublicationInPublications(Long publicationId, Boolean inPublications) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        // Si la publication n'est pas vérifiée, la vérifier d'abord
+        if (!publication.getVerified()) {
+            publication.setVerified(true);
+            publication.setVerifiedBy(null); // Vérification automatique
+            publication.setVerifiedAt(LocalDateTime.now());
+        }
+
+        boolean wasInPublications = publication.getInPublications() != null && publication.getInPublications();
+        publication.setInPublications(inPublications);
+        Publication savedPublication = publicationRepository.save(publication);
+
+        // Créer une notification si la publication est mise dans les publications (changement d'état de false à true)
+        if (notificationService != null && savedPublication.getUtilisateur() != null && inPublications && !wasInPublications) {
+            try {
+                String message = String.format("Votre publication \"%s\" a été ajoutée à la page des publications et est maintenant visible sur la page /publications.", 
+                    savedPublication.getTitle());
+                notificationService.createNotification(
+                    savedPublication.getUtilisateur().getId(),
+                    message,
+                    "PUBLICATION_IN_PUBLICATIONS",
+                    savedPublication.getId()
+                );
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la création de la notification: " + e.getMessage());
+            }
+        }
+
+        return savedPublication;
     }
 
     public Publication unverifyPublication(Long publicationId) {
@@ -123,6 +218,54 @@ public class PubImpl implements Ipub {
         }
 
         publication.setStatus(status.trim());
+        return publicationRepository.save(publication);
+    }
+
+    public Publication updatePublicationPrice(Long publicationId, Double price) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        if (price == null || price <= 0) {
+            throw new IllegalArgumentException("Le prix doit être positif");
+        }
+
+        publication.setPrice(price);
+        return publicationRepository.save(publication);
+    }
+
+    public Publication updatePublicationType(Long publicationId, String type) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        if (type == null || type.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le type ne peut pas être vide");
+        }
+
+        publication.setType(type.trim());
+        return publicationRepository.save(publication);
+    }
+
+    public Publication updatePublicationTitle(Long publicationId, String title) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le titre ne peut pas être vide");
+        }
+
+        publication.setTitle(title.trim());
+        return publicationRepository.save(publication);
+    }
+
+    public Publication updatePublicationDescription(Long publicationId, String description) {
+        Publication publication = publicationRepository.findById(publicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Publication non trouvée"));
+
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("La description ne peut pas être vide");
+        }
+
+        publication.setDescription(description.trim());
         return publicationRepository.save(publication);
     }
 

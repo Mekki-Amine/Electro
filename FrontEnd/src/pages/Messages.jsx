@@ -71,11 +71,11 @@ const Messages = () => {
               setError(null);
             }
           } else {
-            setError('Aucun administrateur trouvé. Veuillez contacter le support.');
+            setError('Aucun Fixer trouvé. Veuillez contacter le support.');
           }
         } catch (fallbackErr) {
           console.error('❌ Fallback error:', fallbackErr);
-          setError('Impossible de trouver l\'administrateur. Veuillez réessayer plus tard.');
+          setError('Impossible de trouver Fixer. Veuillez réessayer plus tard.');
         }
       } else {
         setError('Vous devez être connecté pour envoyer des messages.');
@@ -201,7 +201,7 @@ const Messages = () => {
         </div>
         <Card className="p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
-            Messages avec{' '}
+            Discuter avec{' '}
             {adminId && (
               <span 
                 className="text-yellow-600 hover:text-yellow-700 cursor-pointer underline font-semibold"
@@ -209,12 +209,12 @@ const Messages = () => {
                   e.stopPropagation();
                   navigate(`/user/${adminId}`);
                 }}
-                title="Cliquez pour voir le profil de l'administrateur"
+                title="Cliquez pour voir le profil de Fixer"
               >
-                l'administrateur
+                Fixer
               </span>
             )}
-            {!adminId && 'l\'administrateur'}
+            {!adminId && 'Fixer'}
           </h1>
           
           {error && (
@@ -225,7 +225,7 @@ const Messages = () => {
           
           {!adminId && !loading && (
             <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
-              <p>Chargement de l'administrateur...</p>
+              <p>Chargement de Fixer...</p>
             </div>
           )}
 
@@ -256,7 +256,7 @@ const Messages = () => {
                         onClick={() => senderId && navigate(`/user/${senderId}`)}
                         title="Voir le profil"
                       >
-                        {isUser ? (user?.username || user?.email || 'Vous') : 'Administrateur'}
+                        {isUser ? (user?.username || user?.email || 'Vous') : 'Fixer'}
                       </p>
                       <p className="text-sm">{message.content}</p>
                       <p className="text-xs mt-1 opacity-70">

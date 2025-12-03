@@ -54,8 +54,11 @@ const Card = ({ children, hover, className = "" }) => (
 function Pup() {
   const { user, isAuthenticated } = useAuth();
   const [publications, setPublications] = useState([]);
+  const [filteredPublications, setFilteredPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [newPublication, setNewPublication] = useState({
     title: "",
     description: "",
@@ -74,9 +77,10 @@ function Pup() {
   const fetchPublications = () => {
     setLoading(true);
     axios
-      .get("/api/pub")
+      .get("/api/pub/publications-page")
       .then((response) => {
         setPublications(response.data);
+        setFilteredPublications(response.data);
         setError(null);
       })
       .catch((error) => {
@@ -85,6 +89,26 @@ function Pup() {
       })
       .finally(() => setLoading(false));
   };
+
+  // Filtrer les publications par type et par nom
+  useEffect(() => {
+    let filtered = publications;
+    
+    // Filtrer par type
+    if (typeFilter !== '') {
+      filtered = filtered.filter(pub => pub.type === typeFilter);
+    }
+    
+    // Filtrer par nom/titre
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(pub => 
+        pub.title && pub.title.toLowerCase().includes(query)
+      );
+    }
+    
+    setFilteredPublications(filtered);
+  }, [typeFilter, searchQuery, publications]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -207,7 +231,7 @@ function Pup() {
         setSelectedFile(null);
         setFilePreview(null);
         setSubmitSuccess(true);
-        setTimeout(() => setSubmitSuccess(false), 5000);
+        setTimeout(() => setSubmitSuccess(false), 8000); // Afficher le message plus longtemps
       })
       .catch((error) => {
         console.error("Error creating publication:", error);
@@ -291,9 +315,47 @@ function Pup() {
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Publications
           </h1>
-          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-700 max-w-2xl mx-auto mb-6">
             Publiez vos annonces de réparation, achat, vente ou échange
           </p>
+          
+          {/* Recherche et filtres */}
+          <div className="max-w-2xl mx-auto space-y-4">
+            {/* Recherche par nom */}
+            <div>
+              <input
+                type="text"
+                placeholder="Rechercher par nom de publication..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              />
+            </div>
+            
+            {/* Filtre par type */}
+            <div>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              >
+                <option value="">Tous les types</option>
+                <option value="Reparation">Réparation</option>
+                <option value="Achat">Achat</option>
+                <option value="Vente">Vente</option>
+                <option value="exchange">Échange</option>
+                <option value="donation">Donation</option>
+              </select>
+            </div>
+            
+            {(typeFilter || searchQuery.trim()) && (
+              <p className="text-sm text-gray-600 text-center">
+                {filteredPublications.length} publication{filteredPublications.length > 1 ? 's' : ''} trouvée{filteredPublications.length > 1 ? 's' : ''}
+                {typeFilter && ` (type: ${typeFilter})`}
+                {searchQuery.trim() && ` (recherche: "${searchQuery}")`}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="max-w-2xl mx-auto mb-12">
@@ -302,8 +364,19 @@ function Pup() {
               Publier une nouvelle annonce
             </h2>
             {submitSuccess && (
-              <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                ✓ Votre publication a été créée avec succès !
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-300 text-blue-800 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <span className="text-2xl">✅</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold mb-1">Publication créée avec succès !</p>
+                    <p className="text-sm">
+                      Votre publication sera examinée par Fixer avant d'être publiée. 
+                      Vous serez notifié une fois qu'elle sera approuvée et visible sur le site.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
             {error && (
@@ -461,16 +534,34 @@ function Pup() {
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
               <p className="mt-4 text-gray-600">Chargement des publications...</p>
             </div>
-          ) : publications.length === 0 ? (
+          ) : filteredPublications.length === 0 ? (
             <Card className="text-center py-12">
               <div className="text-6xl mb-4">📝</div>
-              <p className="text-gray-600">
-                Aucune publication pour le moment. Soyez le premier à publier !
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                {(typeFilter || searchQuery.trim()) 
+                  ? 'Aucune publication trouvée' 
+                  : 'Aucune publication pour le moment'}
+              </h2>
+              <p className="text-gray-600 mb-4">
+                {(typeFilter || searchQuery.trim())
+                  ? 'Essayez de modifier vos critères de recherche ou consultez toutes les publications.'
+                  : 'Soyez le premier à publier !'}
               </p>
+              {(typeFilter || searchQuery.trim()) && (
+                <button
+                  onClick={() => {
+                    setTypeFilter('');
+                    setSearchQuery('');
+                  }}
+                  className="inline-block bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors duration-200"
+                >
+                  Voir toutes les publications
+                </button>
+              )}
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {publications.map((publication) => (
+              {filteredPublications.map((publication) => (
                 <Card key={publication.id} hover>
                   {/* Propriétaire avec photo de profil */}
                   {(publication.utilisateurId || publication.utilisateurUsername || publication.utilisateurEmail) && (

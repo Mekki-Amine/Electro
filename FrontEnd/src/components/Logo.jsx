@@ -1,43 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-export const Logo = ({ className = "w-90 h-90" }) => {
-  const [imageError, setImageError] = useState(false);
-  
-  // Essayer de charger l'image depuis le dossier public
-  // Changez le nom du fichier selon votre image (logo.png, logo.jpg, logo.svg, etc.)
-  const logoSrc = '/logo.jpg';
-
-
-  
-  if (imageError) {
-    // SVG de fallback si l'image ne charge pas
-    return (
-      <svg
-        className={className}
-        viewBox="0 0 200 140"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g stroke="#000" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-          <ellipse cx="60" cy="80" rx="30" ry="40" fill="#FFA500" />
-          <ellipse cx="30" cy="85" rx="15" ry="22" fill="#FFA500" transform="rotate(-35 30 85)" />
-          <rect x="50" y="70" width="100" height="12" rx="3" fill="#808080" />
-          <circle cx="40" cy="76" r="14" fill="#808080" />
-          <circle cx="40" cy="76" r="7" fill="#fff" />
-          <circle cx="160" cy="76" r="14" fill="#808080" />
-          <circle cx="160" cy="76" r="7" fill="#fff" />
-        </g>
-      </svg>
-    );
-  }
-  
+export const Logo = ({ className = "w-16 h-16" }) => {
+  // Logo SVG de réparation - Clé à molette plus petite
   return (
-    <img
-      src={logoSrc}
-      alt="Fixer Logo"
+    <svg 
       className={className}
-      onError={() => setImageError(true)}
-    />
+      viewBox="0 0 100 100" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Fond circulaire jaune - Plus petit */}
+      <circle cx="50" cy="50" r="42" fill="#FCD34D" stroke="#F59E0B" strokeWidth="2.5"/>
+      
+      {/* Clé à molette - Plus petite */}
+      <g transform="translate(50, 50)">
+        {/* Tête de la clé à molette (hexagone) */}
+        <polygon 
+          points="-10,-6 10,-6 14,0 10,6 -10,6 -14,0" 
+          fill="#1F2937" 
+          stroke="#111827" 
+          strokeWidth="2.5"
+        />
+        <circle cx="0" cy="0" r="5" fill="#374151"/>
+        
+        {/* Manche de la clé */}
+        <rect x="-2.5" y="6" width="5" height="16" rx="2.5" fill="#92400E" stroke="#78350F" strokeWidth="1.5"/>
+        
+        {/* Poignée */}
+        <rect x="-3.5" y="20" width="7" height="6" rx="1.5" fill="#78350F"/>
+      </g>
+    </svg>
   );
 };
-

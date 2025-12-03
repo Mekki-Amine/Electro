@@ -46,7 +46,17 @@ public class PubController {
 
     @GetMapping
     public ResponseEntity<List<PublicationDTO>> getAllPublications() {
+        // Retourne les publications du catalogue (vérifiées ET inCatalog = true)
         List<PublicationDTO> publications = publicationService.getAllPublications().stream()
+                .map(publicationMapper::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(publications);
+    }
+
+    @GetMapping("/publications-page")
+    public ResponseEntity<List<PublicationDTO>> getPublicationsForPublicationsPage() {
+        // Retourne les publications pour la page /publications (vérifiées mais inCatalog = false)
+        List<PublicationDTO> publications = publicationService.getPublicationsForPublicationsPage().stream()
                 .map(publicationMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(publications);

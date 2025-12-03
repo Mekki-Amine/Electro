@@ -43,6 +43,14 @@ public class Publication implements Serializable {
     @Builder.Default
     private Boolean verified = false;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean inCatalog = false; // true = dans le catalogue (/shop)
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean inPublications = false; // true = dans les publications (/publications)
+
     @Column(nullable = true)
     private Long verifiedBy;
 

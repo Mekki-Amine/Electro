@@ -20,6 +20,8 @@ public class PublicationMapper {
         dto.setPrice(publication.getPrice());
         dto.setStatus(publication.getStatus());
         dto.setVerified(publication.getVerified());
+        dto.setInCatalog(publication.getInCatalog() != null ? publication.getInCatalog() : false);
+        dto.setInPublications(publication.getInPublications() != null ? publication.getInPublications() : false);
         dto.setVerifiedBy(publication.getVerifiedBy());
         dto.setVerifiedAt(publication.getVerifiedAt());
         dto.setFileUrl(publication.getFileUrl());
@@ -60,6 +62,8 @@ public class PublicationMapper {
         // Toujours définir verified à false pour les nouvelles publications
         // Seul un admin peut vérifier une publication
         publication.setVerified(false);
+        publication.setInCatalog(dto.getInCatalog() != null ? dto.getInCatalog() : false);
+        publication.setInPublications(dto.getInPublications() != null ? dto.getInPublications() : false);
         publication.setVerifiedBy(dto.getVerifiedBy());
         publication.setVerifiedAt(dto.getVerifiedAt());
         publication.setFileUrl(dto.getFileUrl());

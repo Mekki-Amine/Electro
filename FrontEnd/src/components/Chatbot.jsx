@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export const Chatbot = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Bonjour ! Je suis l'assistant virtuel de Fixer. Comment puis-je vous aider aujourd'hui ? Je peux vous renseigner sur nos services, nos publications et notre catalogue.",
+      text: "Bonjour ! Je suis l'assistant virtuel de Fixer. 👋\n\nJe peux vous aider à :\n• Rechercher dans notre catalogue de publications\n• Trouver des réparateurs spécialisés\n• Répondre à vos questions sur nos services\n\nTapez 'catalogue' ou 'publications' pour voir nos offres disponibles !",
       sender: 'bot',
       timestamp: new Date(),
+      publications: [],
     },
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -39,14 +42,21 @@ export const Chatbot = ({ isOpen, onClose }) => {
       setIsLoadingPublications(true);
       // Charger les publications du catalogue
       const catalogResponse = await axios.get('/api/pub');
-      setCatalogPublications(catalogResponse.data || []);
+      const catalogData = catalogResponse.data || [];
+      setCatalogPublications(catalogData);
+      console.log('📚 Publications du catalogue chargées:', catalogData.length);
       
       // Charger les publications de la page publications
       const publicationsResponse = await axios.get('/api/pub/publications-page');
-      setPublications(publicationsResponse.data || []);
+      const publicationsData = publicationsResponse.data || [];
+      setPublications(publicationsData);
+      console.log('📄 Publications de la page chargées:', publicationsData.length);
+      console.log('📊 Total publications:', catalogData.length + publicationsData.length);
     } catch (error) {
       console.error('Erreur lors du chargement des publications:', error);
       // Ne pas bloquer le chatbot si les publications ne peuvent pas être chargées
+      setCatalogPublications([]);
+      setPublications([]);
     } finally {
       setIsLoadingPublications(false);
     }
@@ -81,76 +91,146 @@ export const Chatbot = ({ isOpen, onClose }) => {
   };
 
   const formatPublicationMessage = (publications) => {
-    if (publications.length === 0) {
-      return "Je n'ai trouvé aucune publication correspondant à votre recherche. Essayez avec d'autres mots-clés ou consultez notre catalogue directement.";
+    if (!publications || publications.length === 0) {
+      return {
+        text: "Je n'ai trouvé aucune publication pour le moment. Les publications seront disponibles une fois qu'elles auront été vérifiées par notre équipe.",
+        publications: []
+      };
     }
 
-    let message = `J'ai trouvé ${publications.length} publication(s) :\n\n`;
+    const displayedPublications = publications.slice(0, 5);
+    let message = `📋 J'ai trouvé ${publications.length} publication(s) disponible(s) :\n\n`;
     
-    publications.slice(0, 5).forEach((pub, index) => {
-      message += `${index + 1}. **${pub.title}**\n`;
-      message += `   Type: ${pub.type || 'Non spécifié'}\n`;
+    displayedPublications.forEach((pub, index) => {
+      message += `🔹 ${index + 1}. ${pub.title || 'Sans titre'}\n`;
+      if (pub.type) {
+        message += `   📌 Type: ${pub.type}\n`;
+      }
       if (pub.price && pub.price > 0) {
-        message += `   Prix: ${pub.price}€\n`;
+        message += `   💰 Prix: ${pub.price}€\n`;
+      } else if (pub.price === 0 || !pub.price) {
+        message += `   💰 Prix: Gratuit ou à discuter\n`;
       }
       if (pub.description) {
-        const shortDesc = pub.description.length > 100 
-          ? pub.description.substring(0, 100) + '...' 
+        const shortDesc = pub.description.length > 80 
+          ? pub.description.substring(0, 80) + '...' 
           : pub.description;
-        message += `   Description: ${shortDesc}\n`;
+        message += `   📝 ${shortDesc}\n`;
+      }
+      if (pub.utilisateurUsername) {
+        message += `   👤 Réparateur: ${pub.utilisateurUsername}\n`;
       }
       message += `\n`;
     });
 
     if (publications.length > 5) {
-      message += `\nEt ${publications.length - 5} autre(s) publication(s). Consultez notre catalogue pour voir toutes les publications disponibles.`;
+      message += `\n... et ${publications.length - 5} autre(s) publication(s).\n`;
     }
 
-    message += `\n\nVous pouvez visiter notre catalogue pour plus de détails et contacter les réparateurs.`;
+    message += `\n💡 Vous pouvez visiter notre catalogue (menu "Catalogue") pour voir toutes les publications et contacter les réparateurs directement.`;
 
-    return message;
+    return {
+      text: message,
+      publications: displayedPublications
+    };
   };
 
   const getBotResponse = (userMessage) => {
-    const lowerMessage = userMessage.toLowerCase();
+    const lowerMessage = userMessage.toLowerCase().trim();
+    const allPublications = [...catalogPublications, ...publications];
     
-    // Détecter les demandes de recherche dans les publications
-    const searchKeywords = ['publication', 'catalogue', 'recherche', 'trouve', 'cherche', 'disponible', 'service', 'réparation', 'réparateur'];
-    const isSearchRequest = searchKeywords.some(keyword => lowerMessage.includes(keyword)) 
-      || lowerMessage.includes('qu\'est-ce') 
-      || lowerMessage.includes('qu\'est ce')
-      || lowerMessage.includes('quelles')
-      || lowerMessage.includes('quels');
+    // Détecter les demandes de voir le catalogue ou les publications
+    const catalogKeywords = ['catalogue', 'catalog', 'shop', 'boutique'];
+    const publicationKeywords = ['publication', 'publications', 'services', 'offres'];
+    const searchKeywords = ['recherche', 'trouve', 'cherche', 'disponible', 'trouver', 'rechercher'];
+    const questionKeywords = ['qu\'est-ce', 'qu\'est ce', 'quelles', 'quels', 'quoi', 'montre', 'affiche', 'liste'];
+    
+    const wantsCatalog = catalogKeywords.some(keyword => lowerMessage.includes(keyword));
+    const wantsPublications = publicationKeywords.some(keyword => lowerMessage.includes(keyword));
+    const wantsSearch = searchKeywords.some(keyword => lowerMessage.includes(keyword));
+    const isQuestion = questionKeywords.some(keyword => lowerMessage.includes(keyword));
+    
+    const isPublicationRequest = wantsCatalog || wantsPublications || wantsSearch || isQuestion;
 
-    if (isSearchRequest && (catalogPublications.length > 0 || publications.length > 0)) {
+    // Si l'utilisateur demande le catalogue ou les publications
+    if (isPublicationRequest && allPublications.length > 0) {
+      // Si c'est une demande de catalogue/publications sans recherche spécifique
+      if ((wantsCatalog || wantsPublications) && !wantsSearch) {
+        // Afficher toutes les publications disponibles
+        return formatPublicationMessage(allPublications);
+      }
+      
+      // Si c'est une recherche spécifique
+      if (wantsSearch || (isQuestion && lowerMessage.length > 10)) {
+        const searchResults = searchPublications(userMessage);
+        if (searchResults.length > 0) {
+          return formatPublicationMessage(searchResults);
+        } else {
+          // Si aucune correspondance, afficher quand même quelques publications
+          const defaultResult = formatPublicationMessage(allPublications.slice(0, 5));
+          return {
+            text: `Je n'ai trouvé aucune publication correspondant exactement à "${userMessage}". Voici quelques publications disponibles :\n\n${defaultResult.text}`,
+            publications: defaultResult.publications
+          };
+        }
+      }
+      
+      // Par défaut, afficher toutes les publications
+      return formatPublicationMessage(allPublications);
+    }
+
+    // Si l'utilisateur demande des publications mais qu'aucune n'est chargée
+    if (isPublicationRequest && allPublications.length === 0) {
+      return {
+        text: "Je suis en train de charger les publications. Veuillez patienter quelques instants et réessayez.",
+        publications: []
+      };
+    }
+
+    // Recherche de mots-clés spécifiques (seulement si ce n'est pas une demande de publications)
+    for (const [keyword, response] of Object.entries(botResponses)) {
+      if (lowerMessage.includes(keyword) && !isPublicationRequest) {
+        return {
+          text: response,
+          publications: []
+        };
+      }
+    }
+
+    // Réponses par défaut
+    if (lowerMessage.includes('problème') || lowerMessage.includes('panne')) {
+      if (allPublications.length > 0) {
+        return {
+          text: "Je comprends que vous avez un problème. Je peux rechercher dans nos publications pour trouver un réparateur spécialisé. Que recherchez-vous exactement ?",
+          publications: []
+        };
+      }
+      return {
+        text: "Je comprends que vous avez un problème. Pouvez-vous me donner plus de détails sur votre appareil et le symptôme que vous observez ?",
+        publications: []
+      };
+    }
+
+    if (lowerMessage.includes('urgence') || lowerMessage.includes('urgent')) {
+      return {
+        text: "Pour les urgences, contactez-nous directement au +33 1 23 45 67 89. Nous ferons de notre mieux pour intervenir rapidement.",
+        publications: []
+      };
+    }
+
+    // Si le message contient des mots liés aux appareils électroménagers, proposer une recherche
+    const applianceKeywords = ['lave-linge', 'lave-vaisselle', 'réfrigérateur', 'four', 'micro-ondes', 'lave linge', 'lave vaisselle', 'machine', 'appareil'];
+    if (applianceKeywords.some(keyword => lowerMessage.includes(keyword)) && allPublications.length > 0) {
       const searchResults = searchPublications(userMessage);
       if (searchResults.length > 0) {
         return formatPublicationMessage(searchResults);
       }
     }
 
-    // Recherche de mots-clés spécifiques
-    for (const [keyword, response] of Object.entries(botResponses)) {
-      if (lowerMessage.includes(keyword)) {
-        return response;
-      }
-    }
-
-    // Si la recherche ne donne rien mais que c'est une demande de recherche
-    if (isSearchRequest) {
-      return "Je peux vous aider à rechercher dans nos publications. Pouvez-vous être plus précis ? Par exemple : 'recherche réparation lave-linge' ou 'publications disponibles'.";
-    }
-
-    // Réponses par défaut
-    if (lowerMessage.includes('problème') || lowerMessage.includes('panne')) {
-      return "Je comprends que vous avez un problème. Pouvez-vous me donner plus de détails sur votre appareil et le symptôme que vous observez ? Je peux aussi rechercher dans nos publications pour trouver un réparateur spécialisé.";
-    }
-
-    if (lowerMessage.includes('urgence') || lowerMessage.includes('urgent')) {
-      return "Pour les urgences, contactez-nous directement au +33 1 23 45 67 89. Nous ferons de notre mieux pour intervenir rapidement.";
-    }
-
-    return "Je comprends votre question. Je peux vous aider à rechercher dans nos publications ou vous pouvez nous contacter directement par email à contact@fixer.fr ou par téléphone au +33 1 23 45 67 89.";
+    return {
+      text: "Je comprends votre question. Je peux vous aider à rechercher dans nos publications (tapez 'catalogue' ou 'publications') ou vous pouvez nous contacter directement par email à contact@fixer.fr ou par téléphone au +33 1 23 45 67 89.",
+      publications: []
+    };
   };
 
   const handleSendMessage = (e) => {
@@ -170,11 +250,13 @@ export const Chatbot = ({ isOpen, onClose }) => {
 
     // Simuler un délai avant la réponse du bot
     setTimeout(() => {
+      const response = getBotResponse(inputMessage);
       const botResponse = {
         id: messages.length + 2,
-        text: getBotResponse(inputMessage),
+        text: typeof response === 'string' ? response : response.text,
         sender: 'bot',
         timestamp: new Date(),
+        publications: typeof response === 'object' && response.publications ? response.publications : [],
       };
       setMessages((prev) => [...prev, botResponse]);
     }, 800);
@@ -229,18 +311,76 @@ export const Chatbot = ({ isOpen, onClose }) => {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${
-                message.sender === 'user' ? 'justify-end' : 'justify-start'
+              className={`flex flex-col ${
+                message.sender === 'user' ? 'items-end' : 'items-start'
               }`}
             >
               <div
-                className={`max-w-[75%] rounded-lg px-4 py-2 ${
+                className={`max-w-[85%] rounded-lg px-4 py-2 ${
                   message.sender === 'user'
                     ? 'bg-yellow-400 text-gray-900'
                     : 'bg-white text-gray-800 border border-gray-200'
                 }`}
               >
                 <p className="text-sm whitespace-pre-line">{message.text}</p>
+                
+                {/* Afficher les publications avec leurs images */}
+                {message.publications && message.publications.length > 0 && (
+                  <div className="mt-3 space-y-3">
+                    {message.publications.map((pub) => (
+                      <div
+                        key={pub.id}
+                        className="border border-gray-200 rounded-lg p-3 bg-gray-50 hover:border-yellow-400 transition-colors"
+                      >
+                        {/* Image de la publication - cliquable */}
+                        {pub.fileUrl && pub.fileType?.startsWith('image/') && (
+                          <div 
+                            className="mb-2 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => {
+                              // Fermer le chatbot
+                              onClose();
+                              // Naviguer vers le catalogue
+                              navigate('/shop');
+                            }}
+                            title="Cliquez pour voir la publication dans le catalogue"
+                          >
+                            <img
+                              src={`http://localhost:9090${pub.fileUrl}`}
+                              alt={pub.title || 'Publication'}
+                              className="w-full h-32 object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Informations de la publication */}
+                        <div className="space-y-1">
+                          <h4 className="font-semibold text-sm text-gray-900">
+                            {pub.title || 'Sans titre'}
+                          </h4>
+                          {pub.type && (
+                            <p className="text-xs text-gray-600">
+                              📌 {pub.type}
+                            </p>
+                          )}
+                          {pub.price !== undefined && pub.price !== null && (
+                            <p className="text-xs text-gray-600">
+                              💰 {pub.price > 0 ? `${pub.price}€` : 'Gratuit ou à discuter'}
+                            </p>
+                          )}
+                          {pub.utilisateurUsername && (
+                            <p className="text-xs text-gray-600">
+                              👤 {pub.utilisateurUsername}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
                 <p className="text-xs mt-1 opacity-70">
                   {message.timestamp.toLocaleTimeString('fr-FR', {
                     hour: '2-digit',

@@ -10,5 +10,6 @@ public interface IRecommendation {
     Double getAverageRating();
     Long getTotalRecommendations();
     List<Recommendation> getAllRecommendations();
+    void deleteRecommendation(Long recommendationId);
 }
 

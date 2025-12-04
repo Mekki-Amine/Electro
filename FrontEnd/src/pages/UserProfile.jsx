@@ -12,12 +12,11 @@ const UserProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [recommendation, setRecommendation] = useState(null);
 
   useEffect(() => {
     if (userId) {
       fetchProfile();
-      fetchUserRecommendation();
+      // Ne plus charger la recommandation - section masquée
     }
   }, [userId]);
 
@@ -35,19 +34,6 @@ const UserProfile = () => {
     }
   };
 
-  const fetchUserRecommendation = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const response = await axios.get(`/api/recommendations/user/${userId}`, { headers });
-      if (response.data) {
-        setRecommendation(response.data);
-      }
-    } catch (err) {
-      // Pas de recommandation pour cet utilisateur
-      setRecommendation(null);
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Jamais';
@@ -193,56 +179,6 @@ const UserProfile = () => {
               </div>
             </div>
           </div>
-        </Card>
-
-        {/* Section Recommandation */}
-        <Card className="p-8 mt-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Recommandation
-          </h2>
-          {recommendation ? (
-            <div className="space-y-4">
-              <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="flex items-center gap-1">
-                    {[...Array(10)].map((_, i) => (
-                      <span
-                        key={i}
-                        className={`text-2xl ${
-                          i < recommendation.rating
-                            ? 'text-yellow-500'
-                            : 'text-gray-300'
-                        }`}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-xl font-bold text-gray-900">
-                    {recommendation.rating} / 10
-                  </span>
-                </div>
-                {recommendation.createdAt && (
-                  <p className="text-sm text-gray-600">
-                    Recommandation donnée le{' '}
-                    {new Date(recommendation.createdAt).toLocaleDateString('fr-FR', {
-                      day: '2-digit',
-                      month: 'long',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <p className="text-gray-600">
-                Cet utilisateur n'a pas encore donné de recommandation.
-              </p>
-            </div>
-          )}
         </Card>
       </div>
     </div>

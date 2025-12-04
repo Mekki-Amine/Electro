@@ -75,6 +75,19 @@ public class RecommendationController {
         }
     }
 
+    @DeleteMapping("/{recommendationId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteRecommendation(@PathVariable Long recommendationId) {
+        try {
+            recommendationService.deleteRecommendation(recommendationId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
     // Classes internes pour les requêtes
     public static class RecommendationRequest {
         private Integer rating;

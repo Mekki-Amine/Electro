@@ -63,6 +63,7 @@ public class SecurityConfig {
                         
                         // Recommendations endpoints spécifiques - require authentication pour POST (doit être après le GET public)
                         .requestMatchers("/api/recommendations/user/**").authenticated() // POST /api/recommendations/user/{userId}
+                        .requestMatchers(HttpMethod.DELETE, "/api/recommendations/**").hasRole("ADMIN") // DELETE /api/recommendations/{id} - Admin only
                         
                         // Admin endpoints - require ADMIN role
                         .requestMatchers("/api/pub/admin/**").hasRole("ADMIN")

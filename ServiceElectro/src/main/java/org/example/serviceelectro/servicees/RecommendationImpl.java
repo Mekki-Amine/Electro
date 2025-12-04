@@ -76,5 +76,13 @@ public class RecommendationImpl implements IRecommendation {
     public List<Recommendation> getAllRecommendations() {
         return recommendationRepository.findAllByOrderByCreatedAtDesc();
     }
+
+    @Override
+    public void deleteRecommendation(Long recommendationId) {
+        if (!recommendationRepository.existsById(recommendationId)) {
+            throw new IllegalArgumentException("Recommandation non trouvée");
+        }
+        recommendationRepository.deleteById(recommendationId);
+    }
 }
 

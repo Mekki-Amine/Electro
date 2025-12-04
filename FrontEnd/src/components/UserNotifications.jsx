@@ -15,9 +15,7 @@ export const useUserNotifications = () => {
   useEffect(() => {
     if ('Notification' in window && !hasRequestedPermission.current) {
       if (Notification.permission === 'default') {
-        Notification.requestPermission().then((permission) => {
-          console.log('Notification permission:', permission);
-        });
+        Notification.requestPermission();
         hasRequestedPermission.current = true;
       }
     }
@@ -65,7 +63,7 @@ export const useUserNotifications = () => {
               });
               localStorage.setItem(notificationKey, 'true');
             } catch (err) {
-              console.error('Error showing browser notification:', err);
+              // Erreur silencieuse lors de l'affichage de la notification
             }
           }
         });
@@ -76,8 +74,6 @@ export const useUserNotifications = () => {
         // Message silencieux - la table sera créée automatiquement au prochain redémarrage
         setNotifications([]);
         setUnreadCount(0);
-      } else {
-        console.error('Error fetching notifications:', err);
       }
     }
   };

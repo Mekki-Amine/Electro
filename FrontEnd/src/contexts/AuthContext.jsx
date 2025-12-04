@@ -61,7 +61,6 @@ export const AuthProvider = ({ children }) => {
       });
       setToken(tokenToUse);
     } catch (error) {
-      console.error('Error loading user from token:', error);
       logout();
     } finally {
       setLoading(false);
@@ -73,8 +72,6 @@ export const AuthProvider = ({ children }) => {
       // Normalize email to lowercase
       const normalizedEmail = email.toLowerCase().trim();
       
-      console.log('Attempting login with email:', normalizedEmail);
-      
       const response = await axios.post('/api/auth/login', { 
         email: normalizedEmail, 
         password: password 
@@ -85,12 +82,9 @@ export const AuthProvider = ({ children }) => {
         }
       });
       
-      console.log('✅ Login response received:', response.data);
-      
       const { token: newToken, email: userEmail, role, userId, username } = response.data;
       
       if (!newToken) {
-        console.error('No token in response:', response.data);
         return {
           success: false,
           error: 'Erreur: Token non reçu du serveur',
@@ -109,24 +103,6 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
-      // Log detailed error information
-      console.group('🔴 Login Error Details');
-      console.error('Error message:', error.message);
-      console.error('Error code:', error.code);
-      
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response status text:', error.response.statusText);
-        console.error('Response data:', JSON.stringify(error.response.data, null, 2));
-        console.error('Response headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('No response received. Request:', error.request);
-        console.error('This usually means the server is not running or not accessible.');
-      }
-      
-      console.error('Full error:', error);
-      console.groupEnd();
-      
       let errorMessage = 'Erreur de connexion';
       
       if (error.response) {
@@ -172,7 +148,7 @@ export const AuthProvider = ({ children }) => {
       try {
         await axios.post(`/api/auth/logout/${userId}`);
       } catch (err) {
-        console.error('Error logging out:', err);
+        // Erreur silencieuse lors de la déconnexion
       }
     }
     

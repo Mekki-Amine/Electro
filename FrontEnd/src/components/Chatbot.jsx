@@ -38,16 +38,12 @@ export const Chatbot = ({ isOpen, onClose }) => {
       const catalogResponse = await axios.get('/api/pub');
       const catalogData = catalogResponse.data || [];
       setCatalogPublications(catalogData);
-      console.log('📚 Publications du catalogue chargées:', catalogData.length);
       
       // Charger les publications de la page publications
       const publicationsResponse = await axios.get('/api/pub/publications-page');
       const publicationsData = publicationsResponse.data || [];
       setPublications(publicationsData);
-      console.log('📄 Publications de la page chargées:', publicationsData.length);
-      console.log('📊 Total publications:', catalogData.length + publicationsData.length);
     } catch (error) {
-      console.error('Erreur lors du chargement des publications:', error);
       // Ne pas bloquer le chatbot si les publications ne peuvent pas être chargées
       setCatalogPublications([]);
       setPublications([]);

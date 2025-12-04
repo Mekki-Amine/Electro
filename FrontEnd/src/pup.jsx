@@ -85,7 +85,6 @@ function Pup() {
         setError(null);
       })
       .catch((error) => {
-        console.error("Error fetching publications:", error);
         setError("Impossible de charger les publications. Vérifiez que le serveur est démarré.");
       })
       .finally(() => setLoading(false));
@@ -235,7 +234,6 @@ function Pup() {
         },
       })
       .then((response) => {
-        console.log("Publication created:", response.data);
         setPublications([response.data, ...publications]);
         setNewPublication({
           title: "",
@@ -250,8 +248,6 @@ function Pup() {
         setShowModal(false); // Fermer la modale après succès
       })
       .catch((error) => {
-        console.error("Error creating publication:", error);
-        
         let errorMessage = "Erreur lors de la publication. Veuillez réessayer.";
         
         if (error.response) {

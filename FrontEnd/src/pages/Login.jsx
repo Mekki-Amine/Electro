@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { BackButton } from '../components/BackButton';
-import { testApiConnection } from '../utils/apiTest';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -14,20 +13,9 @@ const Login = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [apiConnected, setApiConnected] = useState(null);
   
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Test API connection on mount
-    testApiConnection().then(connected => {
-      setApiConnected(connected);
-      if (!connected) {
-        setError('Le serveur backend n\'est pas accessible. Vérifiez que le serveur Spring Boot est démarré sur le port 9090.');
-      }
-    });
-  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,15 +74,6 @@ const Login = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Connexion</h1>
             <p className="text-gray-600">Connectez-vous à votre compte</p>
           </div>
-
-          {apiConnected === false && (
-            <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-              <p className="font-semibold">⚠️ Serveur backend non accessible</p>
-              <p className="text-sm mt-1">
-                Assurez-vous que le serveur Spring Boot est démarré sur le port 9090.
-              </p>
-            </div>
-          )}
 
           {error && (
             <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">

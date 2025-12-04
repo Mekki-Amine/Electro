@@ -46,37 +46,23 @@ const Messages = () => {
 
   const findAdminId = async () => {
     try {
-      console.log('🔍 Looking for admin ID...');
       const response = await axios.get('/api/messages/admin-id');
-      console.log('✅ Admin ID found:', response.data);
       if (response.data) {
         setAdminId(response.data);
         setError(null);
       }
     } catch (err) {
-      console.error('❌ Error finding admin:', err);
-      console.error('Error details:', {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        message: err.message
-      });
-      
       // Fallback: essayer de trouver l'admin via les messages existants
       if (user?.userId) {
         try {
-          console.log('🔄 Trying fallback method...');
           const messagesResponse = await axios.get(`/api/messages/user/${user.userId}`);
-          console.log('Fallback messages:', messagesResponse.data);
           if (messagesResponse.data && messagesResponse.data.length > 0) {
             // Prendre le premier message et extraire l'admin (sender ou receiver)
             const firstMessage = messagesResponse.data[0];
             if (firstMessage.senderId !== user.userId) {
-              console.log('✅ Admin ID found via fallback (sender):', firstMessage.senderId);
               setAdminId(firstMessage.senderId);
               setError(null);
             } else if (firstMessage.receiverId !== user.userId) {
-              console.log('✅ Admin ID found via fallback (receiver):', firstMessage.receiverId);
               setAdminId(firstMessage.receiverId);
               setError(null);
             }
@@ -84,7 +70,6 @@ const Messages = () => {
             setError('Aucun Fixer trouvé. Veuillez contacter le support.');
           }
         } catch (fallbackErr) {
-          console.error('❌ Fallback error:', fallbackErr);
           setError('Impossible de trouver Fixer. Veuillez réessayer plus tard.');
         }
       } else {
@@ -113,11 +98,10 @@ const Messages = () => {
         try {
           await axios.put(`/api/messages/user/${user.userId}/read-all`);
         } catch (markErr) {
-          console.error('Error marking messages as read:', markErr);
+          // Erreur silencieuse lors du marquage des messages comme lus
         }
       }
     } catch (err) {
-      console.error('Error fetching conversation:', err);
       // Si c'est une erreur 404, c'est normal s'il n'y a pas encore de messages
       if (err.response?.status !== 404) {
         setMessages([]);
@@ -177,7 +161,6 @@ const Messages = () => {
         setGettingLocation(false);
       },
       (error) => {
-        console.error('Error getting location:', error);
         alert('Impossible d\'obtenir votre localisation');
         setGettingLocation(false);
       }
@@ -200,7 +183,6 @@ const Messages = () => {
       await axios.delete(`/api/messages/${messageId}?userId=${user.userId}`, { headers });
       await fetchConversation();
     } catch (err) {
-      console.error('Error deleting message:', err);
       alert('Erreur lors de la suppression du message');
     }
   };
@@ -223,7 +205,6 @@ const Messages = () => {
       });
       await fetchConversation();
     } catch (err) {
-      console.error('Error deleting messages:', err);
       alert('Erreur lors de la suppression des messages');
     }
   };
@@ -267,15 +248,6 @@ const Messages = () => {
         fileType = fileResponse.data.fileType;
       }
       
-      console.log('📤 Sending message:', {
-        content: newMessage.trim() || null,
-        senderId: user.userId,
-        receiverId: adminId,
-        fileUrl,
-        latitude: location?.latitude,
-        longitude: location?.longitude
-      });
-      
       const response = await axios.post('/api/messages', {
         content: newMessage.trim() || null,
         senderId: user.userId,
@@ -288,7 +260,6 @@ const Messages = () => {
         locationName: location ? `Lat: ${location.latitude.toFixed(6)}, Lng: ${location.longitude.toFixed(6)}` : null,
       });
       
-      console.log('✅ Message sent successfully:', response.data);
       setNewMessage('');
       setSelectedFile(null);
       setFilePreview(null);
@@ -299,15 +270,6 @@ const Messages = () => {
       setError(null);
       await fetchConversation();
     } catch (err) {
-      console.error('❌ Error sending message:', err);
-      console.error('Error details:', {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        message: err.message,
-        config: err.config
-      });
-      
       // Le serveur retourne maintenant le message d'erreur dans le body
       let errorMessage = 'Erreur lors de l\'envoi du message. Veuillez réessayer.';
       
@@ -324,7 +286,6 @@ const Messages = () => {
         errorMessage = err.response.statusText;
       }
       
-      console.error('Error message from server:', errorMessage);
       alert(errorMessage);
       setError(errorMessage);
     } finally {

@@ -15,9 +15,7 @@ export const useAdminNotifications = () => {
   useEffect(() => {
     if ('Notification' in window && !hasRequestedPermission.current) {
       if (Notification.permission === 'default') {
-        Notification.requestPermission().then((permission) => {
-          console.log('Notification permission:', permission);
-        });
+        Notification.requestPermission();
         hasRequestedPermission.current = true;
       }
     }
@@ -64,7 +62,7 @@ export const useAdminNotifications = () => {
               });
               localStorage.setItem(notificationKey, 'true');
             } catch (err) {
-              console.error('Error showing browser notification:', err);
+              // Erreur silencieuse lors de l'affichage de la notification
             }
           }
         });
@@ -73,8 +71,6 @@ export const useAdminNotifications = () => {
       if (err.response?.status === 500) {
         setNotifications([]);
         setUnreadCount(0);
-      } else {
-        console.error('Error fetching notifications:', err);
       }
     }
   };
@@ -104,7 +100,7 @@ export const useAdminNotifications = () => {
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
-      console.error('Error marking notification as read:', err);
+      // Erreur silencieuse lors du marquage comme lu
     }
   };
 
@@ -122,7 +118,7 @@ export const useAdminNotifications = () => {
       setNotifications([]);
       setUnreadCount(0);
     } catch (err) {
-      console.error('Error marking all notifications as read:', err);
+      // Erreur silencieuse lors du marquage comme lu
     }
   };
 

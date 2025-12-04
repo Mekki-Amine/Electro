@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "./components/Button";
 import { Input } from "./components/Input";
 import { Textarea } from "./components/Textarea";
 import { Card } from "./components/Card";
 import { BackButton } from "./components/BackButton";
+import { useAuth } from "./contexts/AuthContext";
 
 const Contact = () => {
+  const { user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,6 +18,8 @@ const Contact = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState(null);
+  const [adminId, setAdminId] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +28,21 @@ const Contact = () => {
       setFormErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
+
+  useEffect(() => {
+    // Obtenir l'ID de l'admin pour envoyer le message
+    const fetchAdminId = async () => {
+      try {
+        const response = await axios.get('/api/messages/admin-id');
+        if (response.data) {
+          setAdminId(response.data);
+        }
+      } catch (err) {
+        // Si on ne peut pas trouver l'admin, on continue quand même
+      }
+    };
+    fetchAdminId();
+  }, []);
 
   const validateForm = () => {
     const errors = {};
@@ -35,6 +55,9 @@ const Contact = () => {
     if (formData.phone && !/^[0-9+\s-]+$/.test(formData.phone)) {
       errors.phone = "Le numéro de téléphone n'est pas valide";
     }
+    if (!formData.comment.trim()) {
+      errors.comment = "Le message est requis";
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -43,14 +66,47 @@ const Contact = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
+    // Si l'utilisateur n'est pas connecté, on ne peut pas envoyer via le système de messagerie
+    if (!isAuthenticated || !user?.userId) {
+      setError("Pour envoyer un message, veuillez vous connecter ou utilisez les coordonnées ci-dessous.");
+      return;
+    }
+
+    if (!adminId) {
+      setError("Impossible de trouver l'administrateur. Veuillez réessayer plus tard.");
+      return;
+    }
+
     setIsSubmitting(true);
-    // Simuler l'envoi du formulaire
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setError(null);
+
+    try {
+      // Créer le message avec les informations du formulaire de contact
+      const messageContent = `Message de contact de ${formData.name} (${formData.email}${formData.phone ? `, Tél: ${formData.phone}` : ''})\n\n${formData.comment}`;
+
+      await axios.post('/api/messages', {
+        content: messageContent,
+        senderId: user.userId,
+        receiverId: adminId,
+        fileUrl: null,
+        fileName: null,
+        fileType: null,
+        latitude: null,
+        longitude: null,
+        locationName: null,
+      });
+
       setSubmitSuccess(true);
       setFormData({ name: "", email: "", phone: "", comment: "" });
       setTimeout(() => setSubmitSuccess(false), 5000);
-    }, 1500);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.statusText || 
+                          'Erreur lors de l\'envoi du message. Veuillez réessayer.';
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,6 +131,23 @@ const Contact = () => {
               <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
                 ✓ Votre message a été envoyé avec succès ! Nous vous
                 répondrons dans les plus brefs délais.
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <p className="font-semibold">Erreur</p>
+                <p className="text-sm mt-1">{error}</p>
+              </div>
+            )}
+
+            {!isAuthenticated && (
+              <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+                <p className="font-semibold">ℹ️ Information</p>
+                <p className="text-sm mt-1">
+                  Pour envoyer un message via ce formulaire, vous devez être connecté. 
+                  Sinon, vous pouvez nous contacter directement par email ou téléphone.
+                </p>
               </div>
             )}
 

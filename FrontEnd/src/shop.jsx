@@ -34,20 +34,10 @@ const Shop = () => {
       setLoading(true);
       // Récupérer uniquement les publications vérifiées (catalogue)
       const response = await axios.get("/api/pub");
-      console.log("Publications récupérées:", response.data);
-      // Log pour déboguer les informations utilisateur
-      response.data.forEach((pub, index) => {
-        console.log(`Publication ${index + 1} (ID: ${pub.id}):`, {
-          utilisateurId: pub.utilisateurId,
-          utilisateurUsername: pub.utilisateurUsername,
-          utilisateurEmail: pub.utilisateurEmail
-        });
-      });
       setPublications(response.data);
       setFilteredPublications(response.data);
       setError(null);
     } catch (err) {
-      console.error("Error fetching publications:", err);
       setError("Impossible de charger le catalogue. Vérifiez que le serveur est démarré.");
     } finally {
       setLoading(false);
@@ -97,7 +87,6 @@ const Shop = () => {
       
       alert(`${publication.title} a été ajouté au panier !`);
     } catch (err) {
-      console.error('Error adding to cart:', err);
       alert('Erreur lors de l\'ajout au panier');
     } finally {
       setAddingToCart(false);
@@ -140,7 +129,6 @@ const Shop = () => {
         cvv: "",
       });
     } catch (err) {
-      console.error("Payment error:", err);
       alert("Erreur lors du paiement. Veuillez réessayer.");
     } finally {
       setProcessingPayment(false);

@@ -237,15 +237,6 @@ const MessageManagement = () => {
         fileType = fileResponse.data.fileType;
       }
       
-      console.log('📤 Admin sending message:', {
-        content: newMessage.trim() || null,
-        senderId: adminId,
-        receiverId: selectedUserId,
-        fileUrl,
-        latitude: location?.latitude,
-        longitude: location?.longitude
-      });
-      
       const response = await axios.post('/api/messages', {
         content: newMessage.trim() || null,
         senderId: adminId,
@@ -258,7 +249,6 @@ const MessageManagement = () => {
         locationName: location ? `Lat: ${location.latitude.toFixed(6)}, Lng: ${location.longitude.toFixed(6)}` : null,
       });
       
-      console.log('✅ Message sent successfully:', response.data);
       setNewMessage('');
       setSelectedFile(null);
       setFilePreview(null);
@@ -268,14 +258,6 @@ const MessageManagement = () => {
       }
       await fetchConversation(selectedUserId);
     } catch (err) {
-      console.error('❌ Error sending message:', err);
-      console.error('Error details:', {
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-        data: err.response?.data,
-        message: err.message
-      });
-      
       const errorMessage = err.response?.data?.message || 
                           err.response?.statusText || 
                           'Erreur lors de l\'envoi du message. Veuillez réessayer.';
@@ -355,7 +337,6 @@ const MessageManagement = () => {
                       className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center cursor-pointer hover:bg-yellow-200 transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('Navigating to user profile:', u.id);
                         window.location.href = `/user/${u.id}`;
                       }}
                       title="Voir le profil"
@@ -370,7 +351,6 @@ const MessageManagement = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          console.log('Navigating to user profile:', u.id);
                           window.location.href = `/user/${u.id}`;
                         }}
                         title="Cliquez pour voir le profil"
@@ -382,7 +362,6 @@ const MessageManagement = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          console.log('Navigating to user profile:', u.id);
                           window.location.href = `/user/${u.id}`;
                         }}
                         title="Cliquez pour voir le profil"
@@ -419,7 +398,6 @@ const MessageManagement = () => {
                     className="text-yellow-600 hover:text-yellow-700 cursor-pointer underline font-semibold"
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('Navigating to user profile:', selectedUser.id);
                       window.location.href = `/user/${selectedUser.id}`;
                     }}
                     title="Cliquez pour voir le profil"

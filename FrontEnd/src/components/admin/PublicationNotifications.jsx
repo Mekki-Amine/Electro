@@ -13,9 +13,7 @@ export const usePublicationNotifications = () => {
   useEffect(() => {
     if ('Notification' in window && !hasRequestedPermission.current) {
       if (Notification.permission === 'default') {
-        Notification.requestPermission().then((permission) => {
-          console.log('Notification permission:', permission);
-        });
+        Notification.requestPermission();
         hasRequestedPermission.current = true;
       }
     }

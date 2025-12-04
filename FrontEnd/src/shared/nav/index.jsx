@@ -34,7 +34,6 @@ export const Navbar = () => {
           }
         } catch (err) {
           // Ignorer les erreurs silencieusement
-          console.log('Profile photo not available');
         }
       }
     };
@@ -91,16 +90,18 @@ export const Navbar = () => {
             >
               Catalogue
             </Link>
-            <Link
-              to="/contact"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                isActive("/contact")
-                  ? "bg-yellow-500 text-black"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              }`}
-            >
-              Contact
-            </Link>
+            {!isAdmin() && (
+              <Link
+                to="/contact"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  isActive("/contact")
+                    ? "bg-yellow-500 text-black"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                Contact
+              </Link>
+            )}
             <Link
               to="/publications"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${

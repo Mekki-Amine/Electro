@@ -39,10 +39,7 @@ const MessageManagement = () => {
     }
   }, [selectedUserId, adminId]);
 
-  // Scroll vers le bas quand de nouveaux messages arrivent
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // Le scroll automatique a été désactivé - l'utilisateur peut scroller manuellement
 
   const findAdminId = async () => {
     try {
@@ -512,13 +509,29 @@ const MessageManagement = () => {
                                 {/* Localisation */}
                                 {message.latitude && message.longitude && (
                                   <div className="mt-2">
+                                    <div className="mb-2">
+                                      <span className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                                        📍 {message.locationName || 'Localisation'}
+                                      </span>
+                                    </div>
+                                    <div className="rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                                      <iframe
+                                        width="100%"
+                                        height="300"
+                                        style={{ border: 0 }}
+                                        loading="lazy"
+                                        allowFullScreen
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${message.longitude - 0.01},${message.latitude - 0.01},${message.longitude + 0.01},${message.latitude + 0.01}&layer=mapnik&marker=${message.latitude},${message.longitude}`}
+                                      ></iframe>
+                                    </div>
                                     <a
                                       href={`https://www.google.com/maps?q=${message.latitude},${message.longitude}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                      className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-block"
                                     >
-                                      📍 {message.locationName || 'Localisation'}
+                                      Ouvrir dans Google Maps →
                                     </a>
                                   </div>
                                 )}
@@ -582,15 +595,30 @@ const MessageManagement = () => {
                 
                 {/* Localisation sélectionnée */}
                 {location && (
-                  <div className="mb-2 flex items-center gap-2 p-2 bg-blue-100 rounded-lg">
-                    <span>📍 Localisation: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</span>
-                    <button
-                      type="button"
-                      onClick={removeLocation}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ×
-                    </button>
+                  <div className="mb-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                        📍 Localisation: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={removeLocation}
+                        className="text-red-500 hover:text-red-700 font-bold text-lg"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                      <iframe
+                        width="100%"
+                        height="250"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        allowFullScreen
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.01},${location.latitude - 0.01},${location.longitude + 0.01},${location.latitude + 0.01}&layer=mapnik&marker=${location.latitude},${location.longitude}`}
+                      ></iframe>
+                    </div>
                   </div>
                 )}
                 

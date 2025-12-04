@@ -20,13 +20,7 @@ export const Chatbot = ({ isOpen, onClose }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Le scroll automatique a été désactivé - l'utilisateur peut scroller manuellement
 
   useEffect(() => {
     if (isOpen && inputRef.current) {

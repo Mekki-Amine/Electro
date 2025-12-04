@@ -62,15 +62,15 @@ export const Navbar = () => {
   return (
     <nav className="bg-gray-900 text-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 relative">
           <Link
             to="/"
-            className="flex items-center gap-2 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200 -ml-10"
+            className="flex items-center gap-2 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
           >
             <Logo className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0" />
             Fixer
           </Link>
-          <div className="flex items-center space-x-1 md:space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-4 absolute left-1/2 transform -translate-x-1/2">
             <Link
               to="/"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -235,8 +235,11 @@ export const Navbar = () => {
                 Admin
               </Link>
             )}
+          </div>
+          <div className="flex-1"></div>
+          <div className="flex items-center space-x-2 ml-auto">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-3 ml-4">
+              <div className="flex items-center space-x-3">
                 {/* Icône de profil avec point vert */}
                 <Link
                   to="/profile"
@@ -272,7 +275,7 @@ export const Navbar = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2 ml-4">
+              <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
                   className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-md text-sm font-medium transition-colors"

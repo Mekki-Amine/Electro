@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 public class RecommendationDTO {
     private Long id;
     private Long userId;
+    private String username;
+    private String userEmail;
     private Integer rating; // 0 à 10
     private LocalDateTime createdAt;
 }

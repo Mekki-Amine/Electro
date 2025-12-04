@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/recommendations")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
@@ -21,7 +24,7 @@ public class RecommendationController {
     private RecommendationMapper recommendationMapper;
 
     @PostMapping("/user/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<RecommendationDTO> saveRecommendation(
             @PathVariable Long userId,
             @RequestBody RecommendationRequest request) {
@@ -38,7 +41,6 @@ public class RecommendationController {
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<RecommendationDTO> getUserRecommendation(@PathVariable Long userId) {
         Recommendation recommendation = recommendationService.getUserRecommendation(userId);
         if (recommendation == null) {
@@ -57,6 +59,20 @@ public class RecommendationController {
         stats.setTotalRecommendations(totalRecommendations);
         
         return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<RecommendationDTO>> getAllRecommendations() {
+        try {
+            List<Recommendation> recommendations = recommendationService.getAllRecommendations();
+            List<RecommendationDTO> recommendationDTOs = recommendations.stream()
+                    .map(recommendationMapper::toDTO)
+                    .filter(dto -> dto != null) // Filtrer les DTOs null
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(recommendationDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     // Classes internes pour les requêtes

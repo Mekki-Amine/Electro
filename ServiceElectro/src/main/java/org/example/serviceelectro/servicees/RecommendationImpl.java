@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,6 +32,12 @@ public class RecommendationImpl implements IRecommendation {
             throw new IllegalArgumentException("Utilisateur non trouvé");
         }
 
+        Utilisateur user = userOpt.get();
+        // Empêcher les administrateurs de créer des recommandations
+        if ("ADMIN".equals(user.getRole())) {
+            throw new IllegalArgumentException("Les administrateurs ne peuvent pas soumettre de recommandations");
+        }
+
         // Vérifier si l'utilisateur a déjà une recommandation
         Optional<Recommendation> existingOpt = recommendationRepository.findByUser_Id(userId);
         
@@ -42,7 +49,7 @@ public class RecommendationImpl implements IRecommendation {
         } else {
             // Créer une nouvelle recommandation
             Recommendation recommendation = Recommendation.builder()
-                    .user(userOpt.get())
+                    .user(user)
                     .rating(rating)
                     .build();
             return recommendationRepository.save(recommendation);
@@ -63,6 +70,11 @@ public class RecommendationImpl implements IRecommendation {
     @Override
     public Long getTotalRecommendations() {
         return recommendationRepository.getTotalRecommendations();
+    }
+
+    @Override
+    public List<Recommendation> getAllRecommendations() {
+        return recommendationRepository.findAllByOrderByCreatedAtDesc();
     }
 }
 

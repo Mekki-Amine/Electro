@@ -19,6 +19,16 @@ public class RecommendationMapper {
 
         if (recommendation.getUser() != null) {
             dto.setUserId(recommendation.getUser().getId());
+            // Utiliser getRealUsername() si disponible, sinon getUsername() ou email
+            String username = recommendation.getUser().getRealUsername();
+            if (username == null || username.isEmpty()) {
+                username = recommendation.getUser().getUsername();
+            }
+            if (username == null || username.isEmpty()) {
+                username = recommendation.getUser().getEmail();
+            }
+            dto.setUsername(username);
+            dto.setUserEmail(recommendation.getUser().getEmail());
         }
 
         return dto;

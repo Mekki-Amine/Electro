@@ -1,8 +1,8 @@
 package org.example.serviceelectro.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,8 +18,11 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -46,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/pub/create").permitAll()
                         .requestMatchers("/api/comments/publication/**").permitAll()
                         .requestMatchers("/api/recommendations/stats").permitAll() // Stats publiques
+                        .requestMatchers(HttpMethod.GET, "/api/recommendations").permitAll() // GET /api/recommendations - Liste publique
+                        .requestMatchers(HttpMethod.GET, "/api/recommendations/user/**").permitAll() // GET /api/recommendations/user/{userId} - Lecture publique
                         
                         // Messages endpoints - require authentication
                         .requestMatchers("/api/messages/**").authenticated()
@@ -53,9 +58,11 @@ public class SecurityConfig {
                         // Notifications endpoints - require authentication
                         .requestMatchers("/api/notifications/**").authenticated()
                         
-                        // Cart and Recommendations endpoints - require authentication
+                        // Cart endpoints - require authentication
                         .requestMatchers("/api/cart/**").authenticated()
-                        .requestMatchers("/api/recommendations/**").authenticated()
+                        
+                        // Recommendations endpoints spécifiques - require authentication pour POST (doit être après le GET public)
+                        .requestMatchers("/api/recommendations/user/**").authenticated() // POST /api/recommendations/user/{userId}
                         
                         // Admin endpoints - require ADMIN role
                         .requestMatchers("/api/pub/admin/**").hasRole("ADMIN")

@@ -15,6 +15,9 @@ const Shop = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [typeFilter, setTypeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'price-asc', 'price-desc', 'title'
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: "",
     cardHolder: "",
@@ -44,7 +47,7 @@ const Shop = () => {
     }
   };
 
-  // Filtrer les publications par type et par nom
+  // Filtrer et trier les publications
   useEffect(() => {
     let filtered = publications;
     
@@ -61,8 +64,49 @@ const Shop = () => {
       );
     }
     
-    setFilteredPublications(filtered);
-  }, [typeFilter, searchQuery, publications]);
+    // Filtrer par prix minimum
+    if (priceMin !== '' && !isNaN(parseFloat(priceMin))) {
+      filtered = filtered.filter(pub => pub.price >= parseFloat(priceMin));
+    }
+    
+    // Filtrer par prix maximum
+    if (priceMax !== '' && !isNaN(parseFloat(priceMax))) {
+      filtered = filtered.filter(pub => pub.price <= parseFloat(priceMax));
+    }
+    
+    // Trier les résultats
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'price-asc':
+        sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+        break;
+      case 'price-desc':
+        sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case 'title':
+        sorted.sort((a, b) => {
+          const titleA = (a.title || '').toLowerCase();
+          const titleB = (b.title || '').toLowerCase();
+          return titleA.localeCompare(titleB);
+        });
+        break;
+      case 'date':
+      default:
+        // Tri par date (plus récent en premier) - utiliser l'ID comme substitut si createdAt n'est pas disponible
+        sorted.sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+          }
+          // Utiliser l'ID comme substitut (IDs plus grands = plus récents)
+          return (b.id || 0) - (a.id || 0);
+        });
+        break;
+    }
+    
+    setFilteredPublications(sorted);
+  }, [typeFilter, searchQuery, priceMin, priceMax, sortBy, publications]);
 
   const handleAddToCart = async (publication) => {
     if (!isAuthenticated || !user?.userId) {
@@ -162,7 +206,7 @@ const Shop = () => {
           </p>
           
           {/* Recherche et filtres */}
-          <div className="max-w-2xl mx-auto space-y-4">
+          <div className="max-w-3xl mx-auto space-y-4">
             {/* Recherche par nom */}
             <div>
               <input
@@ -174,28 +218,98 @@ const Shop = () => {
               />
             </div>
             
-            {/* Filtre par type */}
-            <div>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
-              >
-                <option value="">Tous les types</option>
-                <option value="Reparation">Réparation</option>
-                <option value="Achat">Achat</option>
-                <option value="Vente">Vente</option>
-                <option value="exchange">Échange</option>
-                <option value="donation">Donation</option>
-              </select>
+            {/* Filtres - Ligne 1 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Filtre par type */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Type
+                </label>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                >
+                  <option value="">Tous les types</option>
+                  <option value="Reparation">Réparation</option>
+                  <option value="Achat">Achat</option>
+                  <option value="Vente">Vente</option>
+                  <option value="exchange">Échange</option>
+                  <option value="donation">Donation</option>
+                </select>
+              </div>
+              
+              {/* Tri */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Trier par
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                >
+                  <option value="date">Plus récent</option>
+                  <option value="price-asc">Prix croissant</option>
+                  <option value="price-desc">Prix décroissant</option>
+                  <option value="title">Nom (A-Z)</option>
+                </select>
+              </div>
             </div>
             
-            {(typeFilter || searchQuery.trim()) && (
-              <p className="text-sm text-gray-600 text-center">
-                {filteredPublications.length} publication{filteredPublications.length > 1 ? 's' : ''} trouvée{filteredPublications.length > 1 ? 's' : ''}
-                {typeFilter && ` (type: ${typeFilter})`}
-                {searchQuery.trim() && ` (recherche: "${searchQuery}")`}
-              </p>
+            {/* Filtres prix - Ligne 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Prix minimum */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Prix minimum (DT)
+                </label>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={priceMin}
+                  onChange={(e) => setPriceMin(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                />
+              </div>
+              
+              {/* Prix maximum */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Prix maximum (DT)
+                </label>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={priceMax}
+                  onChange={(e) => setPriceMax(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                />
+              </div>
+            </div>
+            
+            {/* Bouton réinitialiser les filtres */}
+            {(typeFilter || searchQuery.trim() || priceMin || priceMax) && (
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    setTypeFilter('');
+                    setSearchQuery('');
+                    setPriceMin('');
+                    setPriceMax('');
+                  }}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors duration-200"
+                >
+                  Réinitialiser les filtres
+                </button>
+                <p className="text-sm text-gray-600">
+                  {filteredPublications.length} publication{filteredPublications.length > 1 ? 's' : ''} trouvée{filteredPublications.length > 1 ? 's' : ''}
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -220,20 +334,22 @@ const Shop = () => {
             <Card className="text-center py-12">
               <div className="text-6xl mb-4">📦</div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                {(typeFilter || searchQuery.trim()) 
+                {(typeFilter || searchQuery.trim() || priceMin || priceMax) 
                   ? 'Aucune publication trouvée' 
                   : 'Aucune publication disponible pour le moment'}
               </h2>
               <p className="text-gray-600 mb-6">
-                {(typeFilter || searchQuery.trim())
+                {(typeFilter || searchQuery.trim() || priceMin || priceMax)
                   ? 'Essayez de modifier vos critères de recherche ou consultez toutes les publications.'
                   : 'Le catalogue sera bientôt rempli. En attendant, n\'hésitez pas à nous contacter pour vos besoins spécifiques.'}
               </p>
-              {(typeFilter || searchQuery.trim()) && (
+              {(typeFilter || searchQuery.trim() || priceMin || priceMax) && (
                 <button
                   onClick={() => {
                     setTypeFilter('');
                     setSearchQuery('');
+                    setPriceMin('');
+                    setPriceMax('');
                   }}
                   className="inline-block bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors duration-200 mr-4"
                 >

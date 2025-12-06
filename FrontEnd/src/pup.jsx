@@ -59,6 +59,10 @@ function Pup() {
   const [error, setError] = useState(null);
   const [typeFilter, setTypeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'price-asc', 'price-desc', 'title'
   const [newPublication, setNewPublication] = useState({
     title: "",
     description: "",
@@ -90,7 +94,7 @@ function Pup() {
       .finally(() => setLoading(false));
   };
 
-  // Filtrer les publications par type et par nom
+  // Filtrer et trier les publications
   useEffect(() => {
     let filtered = publications;
     
@@ -107,8 +111,72 @@ function Pup() {
       );
     }
     
-    setFilteredPublications(filtered);
-  }, [typeFilter, searchQuery, publications]);
+    // Filtrer par prix minimum
+    if (priceMin !== '' && !isNaN(parseFloat(priceMin))) {
+      filtered = filtered.filter(pub => pub.price >= parseFloat(priceMin));
+    }
+    
+    // Filtrer par prix maximum
+    if (priceMax !== '' && !isNaN(parseFloat(priceMax))) {
+      filtered = filtered.filter(pub => pub.price <= parseFloat(priceMax));
+    }
+    
+    // Filtrer par statut
+    if (statusFilter !== '') {
+      filtered = filtered.filter(pub => {
+        if (!pub.status) return false;
+        const pubStatus = pub.status.toLowerCase().trim();
+        const filterStatus = statusFilter.toLowerCase().trim();
+        
+        // Gérer les différents formats de statut
+        if (filterStatus === 'traité' || filterStatus === 'traite' || filterStatus === 'processed') {
+          return (pubStatus === 'traité' || pubStatus === 'traite' || pubStatus === 'processed') && 
+                 !pubStatus.includes('pas') && !pubStatus.includes('non');
+        }
+        if (filterStatus === 'non traité' || filterStatus === 'non traite' || filterStatus === 'not_processed') {
+          return pubStatus.includes('pas') || pubStatus.includes('non') || 
+                 pubStatus === 'not_processed' || pubStatus === 'is_not_processed';
+        }
+        if (filterStatus === 'disponible' || filterStatus === 'available') {
+          return pubStatus.includes('disponible') || pubStatus === 'available';
+        }
+        return pubStatus === filterStatus;
+      });
+    }
+    
+    // Trier les résultats
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'price-asc':
+        sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+        break;
+      case 'price-desc':
+        sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case 'title':
+        sorted.sort((a, b) => {
+          const titleA = (a.title || '').toLowerCase();
+          const titleB = (b.title || '').toLowerCase();
+          return titleA.localeCompare(titleB);
+        });
+        break;
+      case 'date':
+      default:
+        // Tri par date (plus récent en premier) - utiliser l'ID comme substitut si createdAt n'est pas disponible
+        sorted.sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+          }
+          // Utiliser l'ID comme substitut (IDs plus grands = plus récents)
+          return (b.id || 0) - (a.id || 0);
+        });
+        break;
+    }
+    
+    setFilteredPublications(sorted);
+  }, [typeFilter, searchQuery, priceMin, priceMax, statusFilter, sortBy, publications]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -332,7 +400,7 @@ function Pup() {
           </p>
           
           {/* Recherche et filtres */}
-          <div className="max-w-2xl mx-auto space-y-4">
+          <div className="max-w-3xl mx-auto space-y-4">
             {/* Recherche par nom */}
             <div>
               <input
@@ -344,28 +412,116 @@ function Pup() {
               />
             </div>
             
-            {/* Filtre par type */}
-            <div>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
-              >
-                <option value="">Tous les types</option>
-                <option value="Reparation">Réparation</option>
-                <option value="Achat">Achat</option>
-                <option value="Vente">Vente</option>
-                <option value="exchange">Échange</option>
-                <option value="donation">Donation</option>
-              </select>
+            {/* Filtres - Ligne 1 */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Filtre par type */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Type
+                </label>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                >
+                  <option value="">Tous les types</option>
+                  <option value="Reparation">Réparation</option>
+                  <option value="Achat">Achat</option>
+                  <option value="Vente">Vente</option>
+                  <option value="exchange">Échange</option>
+                  <option value="donation">Donation</option>
+                </select>
+              </div>
+              
+              {/* Filtre par statut */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Statut
+                </label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                >
+                  <option value="">Tous les statuts</option>
+                  <option value="non traité">Non traité</option>
+                  <option value="traité">Traité</option>
+                  <option value="disponible">Disponible</option>
+                </select>
+              </div>
+              
+              {/* Tri */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Trier par
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                >
+                  <option value="date">Plus récent</option>
+                  <option value="price-asc">Prix croissant</option>
+                  <option value="price-desc">Prix décroissant</option>
+                  <option value="title">Nom (A-Z)</option>
+                </select>
+              </div>
             </div>
             
-            {(typeFilter || searchQuery.trim()) && (
-              <p className="text-sm text-gray-600 text-center">
-                {filteredPublications.length} publication{filteredPublications.length > 1 ? 's' : ''} trouvée{filteredPublications.length > 1 ? 's' : ''}
-                {typeFilter && ` (type: ${typeFilter})`}
-                {searchQuery.trim() && ` (recherche: "${searchQuery}")`}
-              </p>
+            {/* Filtres prix - Ligne 2 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Prix minimum */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Prix minimum (DT)
+                </label>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={priceMin}
+                  onChange={(e) => setPriceMin(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                />
+              </div>
+              
+              {/* Prix maximum */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Prix maximum (DT)
+                </label>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={priceMax}
+                  onChange={(e) => setPriceMax(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+                />
+              </div>
+            </div>
+            
+            {/* Bouton réinitialiser les filtres */}
+            {(typeFilter || searchQuery.trim() || priceMin || priceMax || statusFilter) && (
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => {
+                    setTypeFilter('');
+                    setSearchQuery('');
+                    setPriceMin('');
+                    setPriceMax('');
+                    setStatusFilter('');
+                  }}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors duration-200"
+                >
+                  Réinitialiser les filtres
+                </button>
+                <p className="text-sm text-gray-600">
+                  {filteredPublications.length} publication{filteredPublications.length > 1 ? 's' : ''} trouvée{filteredPublications.length > 1 ? 's' : ''}
+                </p>
+              </div>
             )}
           </div>
         </div>
@@ -578,33 +734,33 @@ function Pup() {
           </div>
         )}
 
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
-            Annonces récentes
-          </h2>
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-              <p className="mt-4 text-gray-600">Chargement des publications...</p>
-            </div>
-          ) : filteredPublications.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+            <p className="mt-4 text-gray-600">Chargement des publications...</p>
+          </div>
+        ) : filteredPublications.length === 0 ? (
+          <div className="max-w-2xl mx-auto">
             <Card className="text-center py-12">
               <div className="text-6xl mb-4">📝</div>
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                {(typeFilter || searchQuery.trim()) 
+                {(typeFilter || searchQuery.trim() || priceMin || priceMax || statusFilter) 
                   ? 'Aucune publication trouvée' 
                   : 'Aucune publication pour le moment'}
               </h2>
               <p className="text-gray-600 mb-4">
-                {(typeFilter || searchQuery.trim())
+                {(typeFilter || searchQuery.trim() || priceMin || priceMax || statusFilter)
                   ? 'Essayez de modifier vos critères de recherche ou consultez toutes les publications.'
                   : 'Soyez le premier à publier !'}
               </p>
-              {(typeFilter || searchQuery.trim()) && (
+              {(typeFilter || searchQuery.trim() || priceMin || priceMax || statusFilter) && (
                 <button
                   onClick={() => {
                     setTypeFilter('');
                     setSearchQuery('');
+                    setPriceMin('');
+                    setPriceMax('');
+                    setStatusFilter('');
                   }}
                   className="inline-block bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors duration-200"
                 >
@@ -612,10 +768,11 @@ function Pup() {
                 </button>
               )}
             </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredPublications.map((publication) => (
-                <Card key={publication.id} hover>
+                <Card key={publication.id} hover className="flex flex-col">
                   {/* Propriétaire avec photo de profil */}
                   {(publication.utilisateurId || publication.utilisateurUsername || publication.utilisateurEmail) && (
                     <div className="mb-3 pb-3 border-b border-gray-200">
@@ -669,12 +826,12 @@ function Pup() {
                   )}
                   
                   {/* Display image if available */}
-                  {publication.fileName && publication.fileType?.startsWith('image/') && (
-                    <div className="mb-4 rounded-lg overflow-hidden">
+                  {publication.fileUrl && publication.fileType?.startsWith('image/') && (
+                    <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">
                       <img
                         src={`http://localhost:9090${publication.fileUrl}`}
                         alt={publication.title}
-                        className="w-full h-48 object-cover"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
@@ -682,54 +839,45 @@ function Pup() {
                     </div>
                   )}
                   
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-bold text-gray-900">
-                      {publication.title}
-                    </h3>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${getTypeColor(
-                        publication.type
-                      )}`}
-                    >
-                      {publication.type}
-                    </span>
-                  </div>
-                  {publication.status && (
-                    <div className="mb-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                          publication.status
-                        )}`}
-                      >
-                        {publication.status}
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="text-xl font-semibold text-gray-900 flex-1">
+                        {publication.title}
+                      </h3>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${getTypeColor(publication.type)} ml-2`}>
+                        {publication.type}
                       </span>
                     </div>
-                  )}
-                  <p className="text-gray-700 mb-4 line-clamp-3">
-                    {publication.description}
-                  </p>
-                  
-                  {/* File indicator */}
-                  {publication.fileName && (
-                    <div className="mb-3 flex items-center text-sm text-gray-600">
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      </svg>
+                    
+                    {publication.status && (
+                      <div className="mb-2">
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(
+                            publication.status
+                          )}`}
+                        >
+                          {publication.status}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <p className="text-gray-600 mb-4 line-clamp-3 flex-1">
+                      {publication.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <span className="text-2xl font-bold text-yellow-600">
+                        {publication.price} DT
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        #{publication.id}
+                      </span>
                     </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                    <span className="text-2xl font-bold text-yellow-600">
-                      {publication.price} DT
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      #{publication.id}
-                    </span>
                   </div>
                 </Card>
               ))}
             </div>
           )}
-        </div>
       </div>
     </div>
   );

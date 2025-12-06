@@ -11,6 +11,9 @@ const PublicationManagement = () => {
   const [statusFilter, setStatusFilter] = useState(''); // Filtre par statut
   const [typeFilter, setTypeFilter] = useState(''); // Filtre par type
   const [searchQuery, setSearchQuery] = useState(''); // Recherche par nom
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'price-asc', 'price-desc', 'title'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -62,7 +65,7 @@ const PublicationManagement = () => {
     }
   };
 
-  // Filtrer les publications par type et par nom
+  // Filtrer et trier les publications
   useEffect(() => {
     let filtered = publications;
     
@@ -79,8 +82,49 @@ const PublicationManagement = () => {
       );
     }
     
-    setFilteredPublications(filtered);
-  }, [typeFilter, searchQuery, publications]);
+    // Filtrer par prix minimum
+    if (priceMin !== '' && !isNaN(parseFloat(priceMin))) {
+      filtered = filtered.filter(pub => pub.price >= parseFloat(priceMin));
+    }
+    
+    // Filtrer par prix maximum
+    if (priceMax !== '' && !isNaN(parseFloat(priceMax))) {
+      filtered = filtered.filter(pub => pub.price <= parseFloat(priceMax));
+    }
+    
+    // Trier les résultats
+    let sorted = [...filtered];
+    switch (sortBy) {
+      case 'price-asc':
+        sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+        break;
+      case 'price-desc':
+        sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case 'title':
+        sorted.sort((a, b) => {
+          const titleA = (a.title || '').toLowerCase();
+          const titleB = (b.title || '').toLowerCase();
+          return titleA.localeCompare(titleB);
+        });
+        break;
+      case 'date':
+      default:
+        // Tri par date (plus récent en premier) - utiliser l'ID comme substitut si createdAt n'est pas disponible
+        sorted.sort((a, b) => {
+          if (a.createdAt && b.createdAt) {
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return dateB - dateA;
+          }
+          // Utiliser l'ID comme substitut (IDs plus grands = plus récents)
+          return (b.id || 0) - (a.id || 0);
+        });
+        break;
+    }
+    
+    setFilteredPublications(sorted);
+  }, [typeFilter, searchQuery, priceMin, priceMax, sortBy, publications]);
 
   const handleSetInCatalog = async (publicationId, inCatalog) => {
     try {
@@ -398,7 +442,7 @@ const PublicationManagement = () => {
         </div>
 
         {/* Recherche et filtres */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="max-w-3xl mx-auto space-y-4 mb-6">
           {/* Recherche par nom */}
           <div>
             <input
@@ -410,27 +454,105 @@ const PublicationManagement = () => {
             />
           </div>
           
-          {/* Filtre par type */}
-          <div>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
-            >
-              <option value="">Tous les types</option>
-              <option value="Reparation">Réparation</option>
-              <option value="Achat">Achat</option>
-              <option value="Vente">Vente</option>
-              <option value="exchange">Échange</option>
-              <option value="donation">Donation</option>
-            </select>
+          {/* Filtres - Ligne 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Filtre par type */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Type
+              </label>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              >
+                <option value="">Tous les types</option>
+                <option value="Reparation">Réparation</option>
+                <option value="Achat">Achat</option>
+                <option value="Vente">Vente</option>
+                <option value="exchange">Échange</option>
+                <option value="donation">Donation</option>
+              </select>
+            </div>
+            
+            {/* Tri */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Trier par
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              >
+                <option value="date">Plus récent</option>
+                <option value="price-asc">Prix croissant</option>
+                <option value="price-desc">Prix décroissant</option>
+                <option value="title">Nom (A-Z)</option>
+              </select>
+            </div>
           </div>
+          
+          {/* Filtres prix - Ligne 2 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Prix minimum */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Prix minimum (DT)
+              </label>
+              <input
+                type="number"
+                placeholder="Min"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              />
+            </div>
+            
+            {/* Prix maximum */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Prix maximum (DT)
+              </label>
+              <input
+                type="number"
+                placeholder="Max"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white text-gray-900"
+              />
+            </div>
+          </div>
+          
+          {/* Bouton réinitialiser les filtres */}
+          {(typeFilter || searchQuery.trim() || priceMin || priceMax) && (
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setTypeFilter('');
+                  setSearchQuery('');
+                  setPriceMin('');
+                  setPriceMax('');
+                }}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors duration-200"
+              >
+                Réinitialiser les filtres
+              </button>
+              <p className="text-sm text-gray-600">
+                {filteredPublications.length} publication{filteredPublications.length > 1 ? 's' : ''} trouvée{filteredPublications.length > 1 ? 's' : ''}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {publications.length === 0 ? (
-          <Card className="col-span-2 text-center py-12">
+          <Card className="col-span-full text-center py-12">
             <div className="text-6xl mb-4">📝</div>
             <p className="text-gray-600">
               {statusFilter
@@ -441,16 +563,18 @@ const PublicationManagement = () => {
             </p>
           </Card>
         ) : filteredPublications.length === 0 ? (
-          <Card className="col-span-2 text-center py-12">
+          <Card className="col-span-full text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
             <p className="text-gray-600 mb-4">
               Aucune publication trouvée avec les critères de recherche
             </p>
-            {(typeFilter || searchQuery.trim()) && (
+            {(typeFilter || searchQuery.trim() || priceMin || priceMax) && (
               <button
                 onClick={() => {
                   setTypeFilter('');
                   setSearchQuery('');
+                  setPriceMin('');
+                  setPriceMax('');
                 }}
                 className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors"
               >
@@ -460,7 +584,7 @@ const PublicationManagement = () => {
           </Card>
         ) : (
           filteredPublications.map((publication) => (
-            <Card key={publication.id} className="p-6">
+            <Card key={publication.id} className="p-6 flex flex-col">
               {/* Informations du propriétaire - EN HAUT */}
               {publication.utilisateurId && (
                 <div className="mb-4 pb-4 border-b border-gray-200">
@@ -512,17 +636,19 @@ const PublicationManagement = () => {
 
               {/* Image */}
               {publication.fileUrl && publication.fileType?.startsWith('image/') && (
-                <div className="mb-4 rounded-lg overflow-hidden">
+                <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">
                   <img
                     src={`http://localhost:9090${publication.fileUrl}`}
                     alt={publication.title}
-                    className="w-full h-48 object-cover"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
                   />
                 </div>
               )}
+              
+              <div className="flex-1 flex flex-col">
 
               <div className="flex items-start justify-between mb-3">
                 {editingTitle === publication.id ? (
@@ -763,6 +889,7 @@ const PublicationManagement = () => {
                 {publication.verifiedAt && (
                   <p><strong>Vérifiée le:</strong> {new Date(publication.verifiedAt).toLocaleDateString('fr-FR')}</p>
                 )}
+              </div>
               </div>
 
               <div className="flex flex-col space-y-2 pt-4 border-t border-gray-200">

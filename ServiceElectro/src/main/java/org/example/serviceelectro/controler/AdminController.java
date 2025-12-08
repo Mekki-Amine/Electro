@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "https://electro-lnoc.vercel.app/")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AdminController {
 
     @Autowired

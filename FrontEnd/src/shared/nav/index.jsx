@@ -5,7 +5,6 @@ import { Logo } from "../../components/Logo";
 import { useUserNotifications } from "../../components/UserNotifications";
 import { useCart } from "../../components/useCart";
 import axios from "axios";
-import API_URL from "../../api";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -17,7 +16,10 @@ export const Navbar = () => {
   const notificationRef = useRef(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
 
-  // 🌐 Variable pour l'URL du backend
+  // 🌐 Variable pour l'URL du backend (vide pour les API car le proxy gère la redirection)
+  const api = '';
+  // Pour les images, utiliser l'URL complète du backend
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090';
  
   const isActive = (path) => location.pathname === path;
 
@@ -42,7 +44,7 @@ export const Navbar = () => {
     };
 
     fetchProfilePhoto();
-  }, [isAuthenticated, user?.userId, api]);
+  }, [isAuthenticated, user?.userId]);
 
   // Fermer le dropdown des notifications quand on clique en dehors
   useEffect(() => {
@@ -249,7 +251,7 @@ export const Navbar = () => {
                 >
                   {profilePhoto ? (
                     <img
-                      src={`${API_URL}${profilePhoto}`} // ← Utilisation de la variable VITE_API_URL
+                      src={`${API_BASE_URL}${profilePhoto}`}
                       alt="Profil"
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {

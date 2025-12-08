@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -20,7 +20,7 @@ const Cart = () => {
     cvv: "",
   });
 
-  const hasLoadedCart = React.useRef(false);
+  const hasLoadedCart = useRef(false);
 
   useEffect(() => {
     if (user?.userId && !hasLoadedCart.current) {

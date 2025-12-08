@@ -444,22 +444,25 @@ const Shop = () => {
                     <span className="text-2xl font-bold text-yellow-600">
                       {publication.price} DT
                     </span>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleAddToCart(publication)}
-                        disabled={addingToCart}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50"
-                        title="Ajouter au panier"
-                      >
-                        🛒
-                      </button>
-                      <button
-                        onClick={() => handleBuyClick(publication)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
-                      >
-                        Acheter
-                      </button>
-                    </div>
+                    {/* Masquer les boutons panier et acheter pour les admins */}
+                    {user?.role !== 'ADMIN' && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleAddToCart(publication)}
+                          disabled={addingToCart}
+                          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                          title="Ajouter au panier"
+                        >
+                          🛒
+                        </button>
+                        <button
+                          onClick={() => handleBuyClick(publication)}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                        >
+                          Acheter
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>

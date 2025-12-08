@@ -10,7 +10,6 @@ if (typeof globalThis.crypto === 'undefined') {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/Electro/FrontEnd',
   build: {
     outDir: 'dist',
   },

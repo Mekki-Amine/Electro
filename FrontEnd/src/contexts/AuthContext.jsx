@@ -72,6 +72,8 @@ export const AuthProvider = ({ children }) => {
       // Normalize email to lowercase
       const normalizedEmail = email.toLowerCase().trim();
       
+      console.log('🔄 Attempting login for:', normalizedEmail);
+      
       const response = await axios.post('/api/auth/login', { 
         email: normalizedEmail, 
         password: password 
@@ -82,12 +84,40 @@ export const AuthProvider = ({ children }) => {
         }
       });
       
-      const { token: newToken, email: userEmail, role, userId, username } = response.data;
+      console.log('✅ Login response received:', response.status);
+      console.log('📦 Response data:', response.data);
+      console.log('📦 Response data type:', typeof response.data);
+      console.log('📦 Response data keys:', response.data ? Object.keys(response.data) : 'null');
       
-      if (!newToken) {
+      // Vérifier que la réponse contient des données
+      if (!response || !response.data) {
+        console.error('❌ No data in response');
+        console.error('❌ Full response object:', response);
         return {
           success: false,
-          error: 'Erreur: Token non reçu du serveur',
+          error: 'Erreur: Aucune donnée reçue du serveur',
+        };
+      }
+      
+      // Extraire les données de la réponse
+      const responseData = response.data;
+      const newToken = responseData.token || responseData.Token || responseData.accessToken;
+      const userEmail = responseData.email || responseData.Email;
+      const role = responseData.role || responseData.Role;
+      const userId = responseData.userId || responseData.UserId;
+      const username = responseData.username || responseData.Username;
+      
+      console.log('🔑 Token extracted:', newToken ? 'Yes' : 'No', 'Length:', newToken?.length);
+      console.log('👤 User data extracted:', { userEmail, role, userId, username });
+      console.log('📋 All response fields:', Object.keys(responseData));
+      
+      if (!newToken || newToken === null || newToken === undefined || newToken === '') {
+        console.error('❌ Token is missing or empty in response');
+        console.error('❌ Full response data:', JSON.stringify(responseData, null, 2));
+        console.error('❌ Response headers:', response.headers);
+        return {
+          success: false,
+          error: 'Erreur: Token non reçu du serveur. Vérifiez les logs du serveur Spring Boot.',
         };
       }
       
@@ -101,17 +131,30 @@ export const AuthProvider = ({ children }) => {
       setToken(newToken);
       setUser({ email: userEmail, role, userId, username });
       
+      console.log('✅ Login successful');
       return { success: true };
     } catch (error) {
+      console.error('❌ Login error:', error);
+      console.error('❌ Error response:', error.response);
+      console.error('❌ Error data:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+      
       let errorMessage = 'Erreur de connexion';
       
       if (error.response) {
         // Server responded with error
         const data = error.response.data;
-        errorMessage = data?.message || 
-                      data?.error ||
-                      (data?.errors ? JSON.stringify(data.errors) : null) ||
-                      `Erreur ${error.response.status}: ${error.response.statusText}`;
+        if (data?.message) {
+          errorMessage = data.message;
+        } else if (data?.error) {
+          errorMessage = data.error;
+        } else if (typeof data === 'string') {
+          errorMessage = data;
+        } else if (data?.errors) {
+          errorMessage = JSON.stringify(data.errors);
+        } else {
+          errorMessage = `Erreur ${error.response.status}: ${error.response.statusText || 'Erreur serveur'}`;
+        }
       } else if (error.request) {
         // Request made but no response
         errorMessage = 'Impossible de contacter le serveur. Vérifiez que le serveur Spring Boot est démarré sur le port 9090.';

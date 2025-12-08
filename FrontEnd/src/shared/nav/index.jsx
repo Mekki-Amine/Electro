@@ -17,6 +17,8 @@ export const Navbar = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
 
   const isActive = (path) => location.pathname === path;
+  const api = import.meta.env.VITE_API_URL;
+
 
   const handleLogout = () => {
     logout();

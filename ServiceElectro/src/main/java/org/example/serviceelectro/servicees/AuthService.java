@@ -56,7 +56,26 @@ public class AuthService {
         // Mettre à jour le statut de connexion
         userService.setUserOnline(utilisateur.getId(), true);
 
-        String token = jwtUtil.generateToken(utilisateur.getEmail(), utilisateur.getRole());
+        String role = utilisateur.getRole() != null ? utilisateur.getRole() : "USER";
+        System.out.println("🔑 Generating token for email: " + utilisateur.getEmail() + ", role: " + role);
+        
+        String token;
+        try {
+            token = jwtUtil.generateToken(utilisateur.getEmail(), role);
+            System.out.println("✅ Token generated. Length: " + (token != null ? token.length() : 0));
+        } catch (Exception e) {
+            System.err.println("❌ ERROR generating token: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de la génération du token: " + e.getMessage(), e);
+        }
+        
+        if (token == null || token.isEmpty()) {
+            System.err.println("❌ ERROR: Token is null or empty after generation!");
+            throw new RuntimeException("Erreur: Token non généré");
+        }
+        
+        System.out.println("✅ Token generated successfully. Length: " + token.length());
+        System.out.println("✅ Token preview: " + (token.length() > 20 ? token.substring(0, 20) + "..." : token));
 
         // Get the actual username field value (since getUsername() is overridden to return email)
         // We'll use reflection to access the private username field
@@ -73,13 +92,22 @@ public class AuthService {
             actualUsername = email;
         }
 
-        return LoginResponse.builder()
+        LoginResponse response = LoginResponse.builder()
                 .token(token)
                 .email(utilisateur.getEmail())
-                .role(utilisateur.getRole() != null ? utilisateur.getRole() : "USER")
+                .role(role)
                 .userId(utilisateur.getId())
                 .username(actualUsername)
                 .build();
+        
+        System.out.println("📦 LoginResponse created:");
+        System.out.println("   - Token: " + (response.getToken() != null ? "Present (" + response.getToken().length() + " chars)" : "NULL"));
+        System.out.println("   - Email: " + response.getEmail());
+        System.out.println("   - Role: " + response.getRole());
+        System.out.println("   - UserId: " + response.getUserId());
+        System.out.println("   - Username: " + response.getUsername());
+        
+        return response;
     }
 }
 

@@ -5,6 +5,7 @@ import { Logo } from "../../components/Logo";
 import { useUserNotifications } from "../../components/UserNotifications";
 import { useCart } from "../../components/useCart";
 import axios from "axios";
+import API_URL from "../../api";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -17,8 +18,7 @@ export const Navbar = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
 
   // 🌐 Variable pour l'URL du backend
-  const api = import.meta.env.VITE_API_URL;
-
+ 
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = () => {
@@ -249,7 +249,7 @@ export const Navbar = () => {
                 >
                   {profilePhoto ? (
                     <img
-                      src={`${api}${profilePhoto}`} // ← Utilisation de la variable VITE_API_URL
+                      src={`${API_URL}${profilePhoto}`} // ← Utilisation de la variable VITE_API_URL
                       alt="Profil"
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {

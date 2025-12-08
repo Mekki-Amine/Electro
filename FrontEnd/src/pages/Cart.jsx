@@ -12,6 +12,7 @@ const Cart = () => {
   const [error, setError] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [deletingItemId, setDeletingItemId] = useState(null);
   const [paymentInfo, setPaymentInfo] = useState({
     cardNumber: "",
     cardHolder: "",
@@ -19,42 +20,169 @@ const Cart = () => {
     cvv: "",
   });
 
+  const hasLoadedCart = React.useRef(false);
+
   useEffect(() => {
-    if (user?.userId) {
+    if (user?.userId && !hasLoadedCart.current) {
+      hasLoadedCart.current = true;
       fetchCart();
     }
-  }, [user]);
+  }, [user?.userId]);
 
-  const fetchCart = async () => {
+  const fetchCart = async (showLoading = true) => {
     if (!user?.userId) return;
 
     try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      if (showLoading) {
+        setLoading(true);
+      }
+      // L'intercepteur axios ajoute automatiquement le token
+      const response = await axios.get(`/api/cart/user/${user.userId}`);
       
-      const response = await axios.get(`/api/cart/user/${user.userId}`, { headers });
-      setCart(response.data);
+      // Vérifier que les données sont valides
+      if (response.data && Array.isArray(response.data.items)) {
+        // Filtrer les items invalides et normaliser les IDs
+        const validItems = response.data.items
+          .filter(item => item && item.id)
+          .map(item => ({
+            ...item,
+            id: typeof item.id === 'string' ? parseInt(item.id, 10) : Number(item.id)
+          }));
+        setCart({
+          ...response.data,
+          items: validItems
+        });
+        console.log('✅ Cart loaded with', validItems.length, 'items');
+      } else {
+        setCart(response.data);
+      }
+      setError(null);
     } catch (err) {
-      console.error('Error fetching cart:', err);
-      setError('Erreur lors du chargement du panier');
+      console.error('❌ Error fetching cart:', err);
+      const errorMessage = err.response?.data?.message || err.message || 'Erreur lors du chargement du panier';
+      setError(errorMessage);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
   const removeItem = async (cartItemId) => {
-    if (!user?.userId) return;
+    console.log('🖱️ removeItem called with ID:', cartItemId, 'type:', typeof cartItemId);
+    
+    // Validation basique
+    if (!cartItemId) {
+      console.error('❌ No cartItemId provided');
+      alert('❌ Erreur: ID de l\'article invalide');
+      return;
+    }
+
+    if (!user?.userId) {
+      console.error('❌ User not authenticated');
+      alert('❌ Erreur: Vous devez être connecté');
+      return;
+    }
+
+    // Empêcher les suppressions multiples simultanées
+    if (deletingItemId !== null) {
+      console.warn('⚠️ Suppression déjà en cours');
+      return;
+    }
+
+    // Convertir l'ID en nombre pour l'API
+    const itemId = Number(cartItemId);
+    if (isNaN(itemId)) {
+      console.error('❌ Invalid ID:', cartItemId);
+      alert('❌ Erreur: ID invalide');
+      return;
+    }
+
+    // Trouver l'item à supprimer
+    const itemToDelete = cart?.items?.find(item => Number(item.id) === itemId);
+    console.log('🔍 Item to delete:', itemToDelete);
+    
+    if (!itemToDelete) {
+      console.error('❌ Item not found. Cart items:', cart?.items?.map(i => ({ id: i.id, type: typeof i.id })));
+      alert('❌ Erreur: Article introuvable dans le panier');
+      return;
+    }
+
+    // Confirmation
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer "${itemToDelete.publicationTitle || 'cet article'}" du panier ?`)) {
+      console.log('❌ User cancelled deletion');
+      return;
+    }
+
+    console.log('✅ Starting deletion for item ID:', itemId);
+    setDeletingItemId(itemId);
+    setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      console.log('🔄 Sending DELETE request to:', `/api/cart/user/${user.userId}/items/${itemId}`);
       
-      await axios.delete(`/api/cart/user/${user.userId}/items/${cartItemId}`, { headers });
-      fetchCart(); // Recharger le panier
+      // Supprimer l'item
+      const response = await axios.delete(`/api/cart/user/${user.userId}/items/${itemId}`);
+      console.log('✅ Delete response:', response.status, response.statusText);
+      
+      // Mettre à jour l'état local immédiatement
+      if (cart && cart.items) {
+        const updatedItems = cart.items.filter(item => Number(item.id) !== itemId);
+        console.log('📝 Updating local state. Before:', cart.items.length, 'After:', updatedItems.length);
+        setCart({
+          ...cart,
+          items: updatedItems
+        });
+      }
+      
+      // Vérifier immédiatement que l'item est bien supprimé côté serveur
+      try {
+        const verifyResponse = await axios.get(`/api/cart/user/${user.userId}`);
+        const serverItems = verifyResponse.data?.items || [];
+        const serverItemsCount = serverItems.length;
+        const localItemsCount = cart?.items?.filter(item => Number(item.id) !== itemId).length || 0;
+        
+        console.log('🔍 Verification: Server items:', serverItemsCount, 'Local items:', localItemsCount);
+        console.log('🔍 Server items IDs:', serverItems.map(i => i.id));
+        
+        // Si le serveur a toujours l'item, forcer un refresh
+        const itemStillExists = serverItems.some(item => Number(item.id) === itemId);
+        if (itemStillExists) {
+          console.warn('⚠️ Item still exists on server! This should not happen.');
+          // Attendre un peu et recharger
+          setTimeout(async () => {
+            await fetchCart(false);
+          }, 300);
+        } else if (serverItemsCount !== localItemsCount) {
+          console.warn('⚠️ Count mismatch! Refreshing from server...');
+          await fetchCart(false);
+        } else {
+          console.log('✅ Verification passed: Item correctly deleted from server');
+        }
+      } catch (verifyErr) {
+        console.error('❌ Error verifying deletion:', verifyErr);
+      }
+      
+      console.log('✅ Item removed successfully');
     } catch (err) {
-      console.error('Error removing item:', err);
-      setError('Erreur lors de la suppression de l\'article');
+      console.error('❌ Error removing item:', err);
+      console.error('❌ Error response:', err.response);
+      console.error('❌ Error status:', err.response?.status);
+      console.error('❌ Error data:', err.response?.data);
+      
+      let errorMessage = 'Erreur lors de la suppression de l\'article';
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+      
+      alert(`❌ ${errorMessage}`);
+      setError(errorMessage);
+    } finally {
+      setDeletingItemId(null);
     }
   };
 
@@ -182,8 +310,13 @@ const Cart = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
-              {cart.items.map((item) => (
-                <div key={item.id} className="bg-white rounded-lg shadow-md p-4 flex items-start gap-4">
+              {cart.items
+                .filter(item => item && item.id != null)
+                .map((item) => {
+                  // Normaliser l'ID pour éviter les problèmes de type
+                  const normalizedItemId = typeof item.id === 'string' ? parseInt(item.id, 10) : Number(item.id);
+                  return (
+                <div key={`cart-item-${normalizedItemId}`} className="bg-white rounded-lg shadow-md p-4 flex items-start gap-4">
                   {item.publicationFileUrl && (
                     <img
                       src={`http://localhost:9090${item.publicationFileUrl}`}
@@ -205,7 +338,7 @@ const Cart = () => {
                       <div className="flex items-center gap-2">
                         <label className="text-sm text-gray-700">Quantité:</label>
                         <button
-                          onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
+                          onClick={() => updateQuantity(normalizedItemId, (item.quantity || 1) - 1)}
                           className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
                           disabled={item.quantity <= 1}
                         >
@@ -215,7 +348,7 @@ const Cart = () => {
                           {item.quantity || 1}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
+                          onClick={() => updateQuantity(normalizedItemId, (item.quantity || 1) + 1)}
                           className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
                         >
                           +
@@ -231,14 +364,25 @@ const Cart = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => removeItem(item.id)}
-                      className="mt-2 text-sm text-red-600 hover:text-red-800"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeItem(item.id);
+                      }}
+                      disabled={deletingItemId !== null}
+                      className={`mt-2 px-3 py-1 text-sm font-semibold rounded transition-colors ${
+                        deletingItemId !== null
+                          ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                          : 'text-white bg-red-500 hover:bg-red-600'
+                      }`}
+                      title="Supprimer cet article du panier"
                     >
-                      Supprimer
+                      {deletingItemId === Number(item.id) ? '⏳ Suppression...' : '🗑️ Supprimer'}
                     </button>
                   </div>
                 </div>
-              ))}
+                  );
+                })}
             </div>
 
             <div className="lg:col-span-1">

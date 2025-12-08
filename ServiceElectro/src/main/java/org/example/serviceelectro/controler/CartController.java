@@ -47,14 +47,23 @@ public class CartController {
 
     @DeleteMapping("/user/{userId}/items/{cartItemId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<Void> removeItemFromCart(
+    public ResponseEntity<?> removeItemFromCart(
             @PathVariable Long userId,
             @PathVariable Long cartItemId) {
         try {
+            if (userId == null || cartItemId == null) {
+                return ResponseEntity.badRequest().body("L'ID utilisateur et l'ID de l'article sont requis");
+            }
+            
             cartService.removeItemFromCart(userId, cartItemId);
             return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace(); // Log pour le débogage
+            return ResponseEntity.status(500).body("Erreur lors de la suppression de l'article du panier: " + e.getMessage());
         }
     }
 

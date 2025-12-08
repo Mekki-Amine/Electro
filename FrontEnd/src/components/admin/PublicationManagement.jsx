@@ -35,12 +35,29 @@ const PublicationManagement = () => {
   const [editingTitleValue, setEditingTitleValue] = useState(''); // Valeur du titre en cours d'édition
   const [editingDescription, setEditingDescription] = useState(null); // ID de la publication en cours d'édition de la description
   const [editingDescriptionValue, setEditingDescriptionValue] = useState(''); // Valeur de la description en cours d'édition
+  const [openMenuId, setOpenMenuId] = useState(null); // ID de la publication dont le menu hamburger est ouvert
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchPublications();
   }, [unverifiedOnly, statusFilter]);
+
+  // Fermer le menu hamburger quand on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId !== null) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId !== null) {
+      document.addEventListener('click', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+      };
+    }
+  }, [openMenuId]);
 
   const fetchPublications = async () => {
     try {
@@ -922,63 +939,101 @@ const PublicationManagement = () => {
                     </div>
                   )}
                   
-                  {/* Boutons pour le catalogue */}
-                  <div className="flex items-center space-x-2">
+                  {/* Menu Hamburger */}
+                  <div className="relative">
                     <button
-                      onClick={() => handleSetInCatalog(publication.id, !publication.inCatalog)}
-                      className={`flex-1 px-4 py-2 rounded-lg transition-colors font-semibold ${
-                        publication.inCatalog
-                          ? 'bg-green-600 text-white'
-                          : 'bg-green-500 hover:bg-green-600 text-white'
-                      }`}
-                      title={publication.inCatalog ? "Retirer du catalogue" : "Mettre dans le catalogue - Visible sur /shop (vérifie automatiquement)"}
-                    >
-                      {publication.inCatalog ? '📋 Retirer du Catalogue' : '📋 Mettre au Catalogue'}
-                    </button>
-                    <button
-                      onClick={() => handleSetInPublications(publication.id, !publication.inPublications)}
-                      className={`flex-1 px-4 py-2 rounded-lg transition-colors font-semibold ${
-                        publication.inPublications
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-blue-500 hover:bg-blue-600 text-white'
-                      }`}
-                      title={publication.inPublications ? "Retirer des publications" : "Mettre dans les publications - Visible sur /publications (vérifie automatiquement)"}
-                    >
-                      {publication.inPublications ? '📄 Retirer des Publications' : '📄 Mettre dans Publications'}
-                    </button>
-                  </div>
-                  
-                  {/* Bouton pour mettre dans les deux */}
-                  {(!publication.inCatalog || !publication.inPublications) && (
-                    <button
-                      onClick={() => {
-                        if (!publication.inCatalog) handleSetInCatalog(publication.id, true);
-                        if (!publication.inPublications) handleSetInPublications(publication.id, true);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === publication.id ? null : publication.id);
                       }}
-                      className="w-full px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors font-semibold"
-                      title="Mettre dans le catalogue ET dans les publications (vérifie automatiquement)"
+                      className="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-semibold flex items-center justify-center space-x-2"
+                      title="Menu d'actions"
                     >
-                      📋📄 Mettre dans les Deux
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                      <span>Actions</span>
                     </button>
-                  )}
-                  
-                  {publication.verified && (
-                    <button
-                      onClick={() => handleUnverify(publication.id)}
-                      className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors font-semibold"
-                      title="Retirer - La publication ne sera plus visible publiquement"
-                    >
-                      ✗ Retirer (Dévérifier)
-                    </button>
-                  )}
+                    
+                    {/* Menu déroulant */}
+                    {openMenuId === publication.id && (
+                      <div 
+                        className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex flex-col">
+                          <button
+                            onClick={() => {
+                              handleSetInCatalog(publication.id, !publication.inCatalog);
+                              setOpenMenuId(null);
+                            }}
+                            className={`w-full px-4 py-2 text-left transition-colors font-semibold ${
+                              publication.inCatalog
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-green-500 text-white hover:bg-green-600'
+                            }`}
+                            title={publication.inCatalog ? "Retirer du catalogue" : "Mettre dans le catalogue - Visible sur /shop (vérifie automatiquement)"}
+                          >
+                            {publication.inCatalog ? '📋 Retirer du Catalogue' : '📋 Mettre au Catalogue'}
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              handleSetInPublications(publication.id, !publication.inPublications);
+                              setOpenMenuId(null);
+                            }}
+                            className={`w-full px-4 py-2 text-left transition-colors font-semibold ${
+                              publication.inPublications
+                                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                : 'bg-blue-500 text-white hover:bg-blue-600'
+                            }`}
+                            title={publication.inPublications ? "Retirer des publications" : "Mettre dans les publications - Visible sur /publications (vérifie automatiquement)"}
+                          >
+                            {publication.inPublications ? '📄 Retirer des Publications' : '📄 Mettre dans Publications'}
+                          </button>
+                          
+                          {(!publication.inCatalog || !publication.inPublications) && (
+                            <button
+                              onClick={() => {
+                                if (!publication.inCatalog) handleSetInCatalog(publication.id, true);
+                                if (!publication.inPublications) handleSetInPublications(publication.id, true);
+                                setOpenMenuId(null);
+                              }}
+                              className="w-full px-4 py-2 text-left bg-purple-500 hover:bg-purple-600 text-white transition-colors font-semibold"
+                              title="Mettre dans le catalogue ET dans les publications (vérifie automatiquement)"
+                            >
+                              📋📄 Mettre dans les Deux
+                            </button>
+                          )}
+                          
+                          {publication.verified && (
+                            <button
+                              onClick={() => {
+                                handleUnverify(publication.id);
+                                setOpenMenuId(null);
+                              }}
+                              className="w-full px-4 py-2 text-left bg-yellow-500 hover:bg-yellow-600 text-white transition-colors font-semibold"
+                              title="Retirer - La publication ne sera plus visible publiquement"
+                            >
+                              ✗ Retirer (Dévérifier)
+                            </button>
+                          )}
+                          
+                          <button
+                            onClick={() => {
+                              handleDelete(publication.id);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full px-4 py-2 text-left bg-red-500 hover:bg-red-600 text-white transition-colors font-semibold"
+                            title="Supprimer définitivement"
+                          >
+                            🗑️ Supprimer
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleDelete(publication.id)}
-                  className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-                  title="Supprimer définitivement"
-                >
-                  🗑️ Supprimer
-                </button>
               </div>
             </Card>
           ))

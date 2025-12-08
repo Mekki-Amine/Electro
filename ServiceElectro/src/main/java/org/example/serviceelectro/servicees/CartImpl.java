@@ -11,6 +11,8 @@ import org.example.serviceelectro.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.util.Optional;
 
@@ -30,12 +32,18 @@ public class CartImpl implements ICart {
     @Autowired
     private PublicationRepository publicationRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Override
     public Cart getOrCreateCart(Long userId) {
         Optional<Cart> cartOpt = cartRepository.findByUser_Id(userId);
         
         if (cartOpt.isPresent()) {
-            return cartOpt.get();
+            Cart cart = cartOpt.get();
+            // Forcer le rechargement depuis la base de données pour éviter le cache
+            entityManager.refresh(cart);
+            return cart;
         } else {
             Optional<Utilisateur> userOpt = userRepository.findById(userId);
             if (userOpt.isEmpty()) {
@@ -83,17 +91,51 @@ public class CartImpl implements ICart {
 
     @Override
     public void removeItemFromCart(Long userId, Long cartItemId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("L'ID utilisateur ne peut pas être null");
+        }
+        
+        if (cartItemId == null) {
+            throw new IllegalArgumentException("L'ID de l'article du panier ne peut pas être null");
+        }
+        
         Optional<CartItem> cartItemOpt = cartItemRepository.findById(cartItemId);
         if (cartItemOpt.isEmpty()) {
-            throw new IllegalArgumentException("Article du panier non trouvé");
+            throw new IllegalArgumentException("Article du panier non trouvé avec l'ID: " + cartItemId);
         }
 
         CartItem cartItem = cartItemOpt.get();
+        
+        if (cartItem.getCart() == null || cartItem.getCart().getUser() == null) {
+            throw new IllegalStateException("L'article du panier n'est pas associé à un panier valide");
+        }
+        
         if (!cartItem.getCart().getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("Vous n'êtes pas autorisé à supprimer cet article");
+            throw new IllegalArgumentException("Vous n'êtes pas autorisé à supprimer cet article. L'article appartient à un autre utilisateur.");
         }
 
-        cartItemRepository.delete(cartItem);
+        try {
+            // Retirer l'item de la liste du panier avant de le supprimer
+            Cart cart = cartItem.getCart();
+            if (cart != null && cart.getItems() != null) {
+                cart.getItems().remove(cartItem);
+                cartRepository.save(cart);
+                entityManager.flush();
+            }
+            
+            // Supprimer l'item directement par ID pour éviter les problèmes de cache
+            cartItemRepository.deleteById(cartItemId);
+            entityManager.flush(); // Forcer la synchronisation immédiate avec la base de données
+            entityManager.clear(); // Vider le cache pour forcer le rechargement
+            
+            // Vérifier que l'item est bien supprimé
+            Optional<CartItem> verifyOpt = cartItemRepository.findById(cartItemId);
+            if (verifyOpt.isPresent()) {
+                throw new RuntimeException("L'article n'a pas été supprimé de la base de données");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la suppression de l'article du panier: " + e.getMessage(), e);
+        }
     }
 
     @Override

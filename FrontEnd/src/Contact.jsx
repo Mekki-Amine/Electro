@@ -219,7 +219,7 @@ const Contact = () => {
             <Card className="text-center">
               <div className="text-4xl mb-4">📞</div>
               <h3 className="font-semibold text-lg mb-2">Téléphone</h3>
-              <p className="text-gray-600">+33 1 23 45 67 89</p>
+              <p className="text-gray-600">+216 71 234 567</p>
             </Card>
           </div>
         </div>

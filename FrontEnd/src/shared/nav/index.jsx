@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Logo } from "../../components/Logo";
 import { useUserNotifications } from "../../components/UserNotifications";
 import { useCart } from "../../components/useCart";
-import axios from "axios";
+import { api, API_BASE_URL } from "../../api";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -16,10 +16,6 @@ export const Navbar = () => {
   const notificationRef = useRef(null);
   const [profilePhoto, setProfilePhoto] = useState(null);
 
-  // 🌐 Variable pour l'URL du backend (vide pour les API car le proxy gère la redirection)
-  // Pour les images, utiliser l'URL complète du backend
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090';
- 
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = () => {
@@ -32,12 +28,12 @@ export const Navbar = () => {
     const fetchProfilePhoto = async () => {
       if (isAuthenticated && user?.userId) {
         try {
-          const response = await axios.get(`${api}/api/utilis/profile/${user.userId}`);
+          const response = await api.get(`/api/utilis/profile/${user.userId}`);
           if (response.data?.profilePhoto) {
             setProfilePhoto(response.data.profilePhoto);
           }
         } catch (err) {
-          console.error("Erreur récupération photo de profil :", err);
+          // Erreur silencieuse - l'utilisateur verra l'initiale à la place
         }
       }
     };

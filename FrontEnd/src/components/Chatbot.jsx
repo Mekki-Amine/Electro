@@ -58,7 +58,7 @@ export const Chatbot = ({ isOpen, onClose }) => {
     prix: "Nos prix varient selon le type de réparation. Pour un devis précis, pouvez-vous me donner plus de détails sur votre appareil ?",
     devis: "Pour obtenir un devis gratuit, vous pouvez remplir le formulaire sur notre page d'accueil ou me donner quelques informations sur votre problème.",
     réparation: "Nous réparons tous types d'appareils électroménagers : lave-linge, lave-vaisselle, réfrigérateur, four, micro-ondes, etc. Quel appareil vous pose problème ?",
-    contact: "Vous pouvez nous contacter par email à contact@fixer.fr ou par téléphone au +33 1 23 45 67 89. Nous sommes disponibles du lundi au vendredi de 9h à 18h.",
+    contact: "Vous pouvez nous contacter par email à contact@fixer.fr ou par téléphone au +216 71 234 567. Nous sommes disponibles du lundi au vendredi de 9h à 18h.",
     horaires: "Nous sommes ouverts du lundi au vendredi de 9h à 18h. Le samedi de 9h à 13h.",
     garantie: "Toutes nos réparations sont garanties. La durée de garantie dépend du type d'intervention.",
     merci: "De rien ! N'hésitez pas si vous avez d'autres questions.",
@@ -203,7 +203,7 @@ export const Chatbot = ({ isOpen, onClose }) => {
 
     if (lowerMessage.includes('urgence') || lowerMessage.includes('urgent')) {
       return {
-        text: "Pour les urgences, contactez-nous directement au +33 1 23 45 67 89. Nous ferons de notre mieux pour intervenir rapidement.",
+        text: "Pour les urgences, contactez-nous directement au +216 71 234 567. Nous ferons de notre mieux pour intervenir rapidement.",
         publications: []
       };
     }
@@ -218,7 +218,7 @@ export const Chatbot = ({ isOpen, onClose }) => {
     }
 
     return {
-      text: "Je comprends votre question. Je peux vous aider à rechercher dans nos publications (tapez 'catalogue' ou 'publications') ou vous pouvez nous contacter directement par email à contact@fixer.fr ou par téléphone au +33 1 23 45 67 89.",
+      text: "Je comprends votre question. Je peux vous aider à rechercher dans nos publications (tapez 'catalogue' ou 'publications') ou vous pouvez nous contacter directement par email à contact@fixer.fr ou par téléphone au +216 71 234 567.",
       publications: []
     };
   };

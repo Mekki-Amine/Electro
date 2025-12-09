@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Logo } from "../../components/Logo";
 import { useUserNotifications } from "../../components/UserNotifications";
 import { useCart } from "../../components/useCart";
-import axios from "axios";
+import { api, API_BASE_URL } from "../../api";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -29,8 +29,8 @@ export const Navbar = () => {
       if (isAuthenticated && user?.userId) {
         try {
           // --- Dans useEffect ---
-        const response = await axios.get(
-         `${import.meta.env.VITE_API_URL}/api/utilis/profile/${user.userId}`);
+        const response = await api.get(
+         `/api/utilis/profile/${user.userId}`);
 
           if (response.data?.profilePhoto) {
             setProfilePhoto(response.data.profilePhoto);
@@ -252,7 +252,7 @@ export const Navbar = () => {
                 >
                   {profilePhoto ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}${profilePhoto}`}
+                      src={`${API_BASE_URL}${profilePhoto}`}
                       alt="Profil"
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Card } from '../components/Card';
 import { BackButton } from '../components/BackButton';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../api';
+import { api, API_BASE_URL } from '../api';
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -98,7 +97,7 @@ const response = await api.get(`/utilis/profile/${userId}`);
                 <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                   {profile.profilePhoto ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}${profile.profilePhoto}`}
+                      src={`${API_BASE_URL}${profile.profilePhoto}`}
                       alt="Photo de profil"
                       className="w-full h-full object-cover"
                     />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import { api } from '../api';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/BackButton';
@@ -36,8 +36,8 @@ const Cart = () => {
       if (showLoading) {
         setLoading(true);
       }
-      // L'intercepteur axios ajoute automatiquement le token
-      const response = await axios.get(`/api/cart/user/${user.userId}`);
+      // L'intercepteur api ajoute automatiquement le token
+      const response = await api.get(`/api/cart/user/${user.userId}`);
       
       // Vérifier que les données sont valides
       if (response.data && Array.isArray(response.data.items)) {
@@ -122,7 +122,7 @@ const Cart = () => {
       console.log('🔄 Sending DELETE request to:', `/api/cart/user/${user.userId}/items/${itemId}`);
       
       // Supprimer l'item
-      const response = await axios.delete(`/api/cart/user/${user.userId}/items/${itemId}`);
+      const response = await api.delete(`/api/cart/user/${user.userId}/items/${itemId}`);
       console.log('✅ Delete response:', response.status, response.statusText);
       
       // Mettre à jour l'état local immédiatement
@@ -137,7 +137,7 @@ const Cart = () => {
       
       // Vérifier immédiatement que l'item est bien supprimé côté serveur
       try {
-        const verifyResponse = await axios.get(`/api/cart/user/${user.userId}`);
+        const verifyResponse = await api.get(`/api/cart/user/${user.userId}`);
         const serverItems = verifyResponse.data?.items || [];
         const serverItemsCount = serverItems.length;
         const localItemsCount = cart?.items?.filter(item => Number(item.id) !== itemId).length || 0;
@@ -190,13 +190,9 @@ const Cart = () => {
     if (!user?.userId || newQuantity <= 0) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      await axios.put(
+      await api.put(
         `/api/cart/user/${user.userId}/items/${cartItemId}`,
-        { quantity: newQuantity },
-        { headers }
+        { quantity: newQuantity }
       );
       fetchCart(); // Recharger le panier
     } catch (err) {
@@ -213,10 +209,7 @@ const Cart = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      await axios.delete(`/api/cart/user/${user.userId}/clear`, { headers });
+      await api.delete(`/api/cart/user/${user.userId}/clear`);
       fetchCart(); // Recharger le panier
     } catch (err) {
       console.error('Error clearing cart:', err);

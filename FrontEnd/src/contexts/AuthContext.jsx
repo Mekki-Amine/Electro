@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { api } from '../api';
 
 const AuthContext = createContext(null);
 
@@ -74,14 +75,9 @@ export const AuthProvider = ({ children }) => {
       
       console.log('🔄 Attempting login for:', normalizedEmail);
       
-      const response = await axios.post('/api/auth/login', { 
+      const response = await api.post('/api/auth/login', { 
         email: normalizedEmail, 
         password: password 
-      }, {
-        timeout: 10000, // 10 second timeout
-        headers: {
-          'Content-Type': 'application/json',
-        }
       });
       
       console.log('✅ Login response received:', response.status);
@@ -174,7 +170,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (userData) => {
     try {
-      const response = await axios.post('/api/utilis', userData);
+      const response = await api.post('/api/utilis', userData);
       return { success: true, data: response.data };
     } catch (error) {
       return {
@@ -189,7 +185,7 @@ export const AuthProvider = ({ children }) => {
     const userId = localStorage.getItem('userId');
     if (userId) {
       try {
-        await axios.post(`/api/auth/logout/${userId}`);
+        await api.post(`/api/auth/logout/${userId}`);
       } catch (err) {
         // Erreur silencieuse lors de la déconnexion
       }

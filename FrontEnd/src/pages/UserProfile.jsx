@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Card } from '../components/Card';
 import { BackButton } from '../components/BackButton';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../api';
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -24,7 +25,10 @@ const UserProfile = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`/api/utilis/profile/${userId}`);
+      
+
+const response = await api.get(`/utilis/profile/${userId}`);
+
       setProfile(response.data);
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -94,7 +98,7 @@ const UserProfile = () => {
                 <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                   {profile.profilePhoto ? (
                     <img
-                      src={`http://localhost:9090${profile.profilePhoto}`}
+                      src={`${import.meta.env.VITE_API_URL}${profile.profilePhoto}`}
                       alt="Photo de profil"
                       className="w-full h-full object-cover"
                     />

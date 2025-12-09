@@ -17,7 +17,6 @@ export const Navbar = () => {
   const [profilePhoto, setProfilePhoto] = useState(null);
 
   // 🌐 Variable pour l'URL du backend (vide pour les API car le proxy gère la redirection)
-  const api = '';
   // Pour les images, utiliser l'URL complète du backend
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:9090';
  

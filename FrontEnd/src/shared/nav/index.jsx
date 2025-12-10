@@ -64,10 +64,10 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16 relative">
           <Link
             to="/"
-            className="flex items-center gap-2 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
+            className="flex items-center gap-0 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
           >
-            <Logo className="w-10 h-10 md:w-12 md:h-12 flex-shrink-0" />
-            Fixer
+            <Logo className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 -mt-1 -ml-8" />
+            <span className="-ml-7">Fixer</span>
           </Link>
 
           <div className="flex items-center space-x-1 md:space-x-4 absolute left-1/2 transform -translate-x-1/2">

@@ -841,9 +841,14 @@ function Pup() {
                   
                   <div className="flex-1 flex flex-col">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-xl font-semibold text-gray-900 flex-1">
-                        {publication.title}
-                      </h3>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-gray-900">
+                          {publication.title}
+                        </h3>
+                        <span className="text-sm text-gray-500 font-medium">
+                          #{publication.id}
+                        </span>
+                      </div>
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${getTypeColor(publication.type)} ml-2`}>
                         {publication.type}
                       </span>
@@ -868,9 +873,6 @@ function Pup() {
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <span className="text-2xl font-bold text-yellow-600">
                         {publication.price} DT
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        #{publication.id}
                       </span>
                     </div>
                   </div>

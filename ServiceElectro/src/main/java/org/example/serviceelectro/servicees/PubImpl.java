@@ -38,7 +38,27 @@ public class PubImpl implements Ipub {
     @Override
     public List<Publication> getAllPublications() {
         // Retourne uniquement les publications vérifiées ET dans le catalogue pour /shop
-        return publicationRepository.findByVerifiedTrueAndInCatalogTrue();
+        // Utiliser JOIN FETCH pour charger l'utilisateur
+        try {
+            List<Publication> publications = publicationRepository.findByVerifiedTrueAndInCatalogTrueWithUser();
+            System.out.println("=== SERVICE - Publications chargées avec utilisateur ===");
+            if (!publications.isEmpty()) {
+                Publication first = publications.get(0);
+                System.out.println("Première publication ID: " + first.getId());
+                System.out.println("Utilisateur: " + (first.getUtilisateur() != null ? first.getUtilisateur().getId() : "NULL"));
+                if (first.getUtilisateur() != null) {
+                    System.out.println("Username: " + first.getUtilisateur().getRealUsername());
+                    System.out.println("Email: " + first.getUtilisateur().getEmail());
+                    System.out.println("Profile Photo: " + first.getUtilisateur().getProfilePhoto());
+                }
+            }
+            return publications;
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement avec JOIN FETCH: " + e.getMessage());
+            e.printStackTrace();
+            // Fallback vers la méthode sans JOIN FETCH
+            return publicationRepository.findByVerifiedTrueAndInCatalogTrue();
+        }
     }
 
     public List<Publication> getPublicationsForPublicationsPage() {

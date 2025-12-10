@@ -50,6 +50,18 @@ public class PubController {
         List<PublicationDTO> publications = publicationService.getAllPublications().stream()
                 .map(publicationMapper::toDTO)
                 .collect(Collectors.toList());
+        
+        // Log pour déboguer les données utilisateur
+        System.out.println("=== CONTROLLER - Nombre de publications: " + publications.size() + " ===");
+        if (!publications.isEmpty()) {
+            PublicationDTO firstPub = publications.get(0);
+            System.out.println("Première publication ID: " + firstPub.getId());
+            System.out.println("Utilisateur ID: " + firstPub.getUtilisateurId());
+            System.out.println("Utilisateur Username: " + firstPub.getUtilisateurUsername());
+            System.out.println("Utilisateur Email: " + firstPub.getUtilisateurEmail());
+            System.out.println("Utilisateur Profile Photo: " + firstPub.getUtilisateurProfilePhoto());
+        }
+        
         return ResponseEntity.ok(publications);
     }
 

@@ -23,18 +23,36 @@ export const Navbar = () => {
     navigate("/");
   };
 
+  // Fonction pour obtenir l'URL complète de la photo de profil
+  const getProfilePhotoUrl = (photoPath) => {
+    if (!photoPath) return null;
+    if (photoPath.startsWith('http')) return photoPath;
+    // En développement, utiliser localhost:9090, sinon utiliser API_BASE_URL
+    const isDev = import.meta.env.DEV;
+    const baseUrl = isDev ? 'http://localhost:9090' : API_BASE_URL;
+    return `${baseUrl}${photoPath}`;
+  };
+
   // Charger la photo de profil depuis le backend
   useEffect(() => {
     const fetchProfilePhoto = async () => {
       if (isAuthenticated && user?.userId) {
         try {
           const response = await api.get(`/api/utilis/profile/${user.userId}`);
+          console.log("Profile data:", response.data);
           if (response.data?.profilePhoto) {
+            console.log("Profile photo path:", response.data.profilePhoto);
             setProfilePhoto(response.data.profilePhoto);
+          } else {
+            console.log("No profile photo found");
+            setProfilePhoto(null);
           }
         } catch (err) {
-          // Erreur silencieuse - l'utilisateur verra l'initiale à la place
+          console.error("Error fetching profile photo:", err);
+          setProfilePhoto(null);
         }
+      } else {
+        setProfilePhoto(null);
       }
     };
 
@@ -66,7 +84,7 @@ export const Navbar = () => {
             to="/"
             className="flex items-center gap-0 text-xl font-bold text-yellow-400 hover:text-yellow-300 transition-colors duration-200"
           >
-            <Logo className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 -mt-1 -ml-8" />
+            <Logo className="w-24 h-24 md:w-28 md:h-28 flex-shrink-0 mb-0.5 -ml-8" />
             <span className="-ml-7">Fixer</span>
           </Link>
 
@@ -246,14 +264,24 @@ export const Navbar = () => {
                 >
                   {profilePhoto ? (
                     <img
-                      src={`${API_BASE_URL}${profilePhoto}`}
+                      src={getProfilePhotoUrl(profilePhoto)}
                       alt="Profil"
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {
+                        console.error("Error loading profile photo:", e);
                         e.target.style.display = "none";
+                        // Afficher l'initiale si l'image ne charge pas
+                        const parent = e.target.parentElement;
+                        if (parent && !parent.querySelector('span:not(.absolute)')) {
+                          const initial = document.createElement('span');
+                          initial.className = "text-gray-900 font-semibold text-sm";
+                          initial.textContent = (user?.username || user?.email || "U").charAt(0).toUpperCase();
+                          parent.appendChild(initial);
+                        }
                       }}
                     />
-                  ) : (
+                  ) : null}
+                  {!profilePhoto && (
                     <span className="text-gray-900 font-semibold text-sm">
                       {(user?.username || user?.email || "U").charAt(0).toUpperCase()}
                     </span>

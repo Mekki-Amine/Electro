@@ -32,14 +32,26 @@ public class PublicationMapper {
             Utilisateur utilisateur = publication.getUtilisateur();
             dto.setUtilisateurId(utilisateur.getId());
             String realUsername = utilisateur.getRealUsername();
-            dto.setUtilisateurUsername(realUsername != null && !realUsername.trim().isEmpty() ? realUsername : null);
+            // Utiliser le username s'il existe, sinon utiliser l'email comme fallback
+            dto.setUtilisateurUsername(realUsername != null && !realUsername.trim().isEmpty() 
+                ? realUsername 
+                : utilisateur.getEmail());
             dto.setUtilisateurEmail(utilisateur.getEmail());
             dto.setUtilisateurProfilePhoto(utilisateur.getProfilePhoto());
+            
+            // Log pour déboguer
+            System.out.println("=== MAPPER - Publication ID: " + publication.getId() + " ===");
+            System.out.println("Utilisateur ID: " + utilisateur.getId());
+            System.out.println("Real Username: " + realUsername);
+            System.out.println("Email: " + utilisateur.getEmail());
+            System.out.println("Profile Photo: " + utilisateur.getProfilePhoto());
+            System.out.println("DTO Username: " + dto.getUtilisateurUsername());
         } else {
             dto.setUtilisateurId(null);
             dto.setUtilisateurUsername(null);
             dto.setUtilisateurEmail(null);
             dto.setUtilisateurProfilePhoto(null);
+            System.out.println("=== MAPPER - Publication ID: " + publication.getId() + " - PAS D'UTILISATEUR ===");
         }
         return dto;
     }

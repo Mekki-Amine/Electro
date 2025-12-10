@@ -37,8 +37,8 @@ const Shop = () => {
       setLoading(true);
       // Récupérer uniquement les publications vérifiées (catalogue)
       const response = await axios.get("/api/pub");
-      setPublications(response.data);
-      setFilteredPublications(response.data);
+      setPublications(response.data || []);
+      setFilteredPublications(response.data || []);
       setError(null);
     } catch (err) {
       setError("Impossible de charger le catalogue. Vérifiez que le serveur est démarré.");
@@ -368,50 +368,6 @@ const Shop = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredPublications.map((publication) => (
               <Card key={publication.id} hover className="flex flex-col">
-                {/* Propriétaire */}
-                {(publication.utilisateurId || publication.utilisateurUsername || publication.utilisateurEmail) && (
-                  <div className="mb-3 pb-3 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center cursor-pointer hover:bg-yellow-200 transition-colors overflow-hidden relative"
-                        onClick={() => publication.utilisateurId && navigate(`/user/${publication.utilisateurId}`)}
-                        title="Voir le profil"
-                      >
-                        {publication.utilisateurProfilePhoto ? (
-                          <img
-                            src={`http://localhost:9090${publication.utilisateurProfilePhoto}`}
-                            alt={publication.utilisateurUsername || publication.utilisateurEmail || "Utilisateur"}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Si l'image ne charge pas, cacher l'image et afficher l'initiale
-                              e.target.style.display = 'none';
-                            }}
-                          />
-                        ) : null}
-                        <span 
-                          className={`text-yellow-600 font-semibold text-sm absolute inset-0 flex items-center justify-center ${publication.utilisateurProfilePhoto ? 'hidden' : ''}`}
-                        >
-                          {(publication.utilisateurUsername || publication.utilisateurEmail || "U").charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div 
-                        className="flex-1 min-w-0 cursor-pointer"
-                        onClick={() => publication.utilisateurId && navigate(`/user/${publication.utilisateurId}`)}
-                        title="Voir le profil"
-                      >
-                        <p className="text-sm font-semibold text-gray-900 truncate hover:text-yellow-600 transition-colors">
-                          {publication.utilisateurUsername || publication.utilisateurEmail || `Utilisateur #${publication.utilisateurId}` || "Utilisateur"}
-                        </p>
-                        {publication.utilisateurEmail && publication.utilisateurEmail !== publication.utilisateurUsername && (
-                          <p className="text-xs text-gray-500 truncate">
-                            {publication.utilisateurEmail}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
                 {/* Image */}
                 {publication.fileUrl && publication.fileType?.startsWith("image/") && (
                   <div className="w-full h-48 mb-4 rounded-lg overflow-hidden">

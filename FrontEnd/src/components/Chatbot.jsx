@@ -65,18 +65,98 @@ export const Chatbot = ({ isOpen, onClose }) => {
     au_revoir: "Au revoir ! N'hésitez pas à revenir si vous avez besoin d'aide.",
   };
 
-  const searchPublications = (query) => {
+  // Dictionnaire de synonymes et variations pour améliorer la recherche
+  const getSearchTerms = (query) => {
     const lowerQuery = query.toLowerCase().trim();
-    const allPublications = [...catalogPublications, ...publications];
+    const terms = [lowerQuery];
     
-    // Rechercher dans le titre, description et type
-    const results = allPublications.filter(pub => {
-      const titleMatch = pub.title && pub.title.toLowerCase().includes(lowerQuery);
-      const descriptionMatch = pub.description && pub.description.toLowerCase().includes(lowerQuery);
-      const typeMatch = pub.type && pub.type.toLowerCase().includes(lowerQuery);
-      return titleMatch || descriptionMatch || typeMatch;
-    });
+    // Synonymes et variations courants
+    const synonyms = {
+      'climatiseur': ['climatisation', 'ac', 'air conditionné', 'air conditionne', 'climatiseurs'],
+      'réfrigérateur': ['frigo', 'réfrigérateurs', 'refrigerateur', 'refrigerateurs'],
+      'lave-linge': ['machine à laver', 'machine a laver', 'lave linge', 'lave-linges'],
+      'lave-vaisselle': ['lave vaisselle', 'lave-vaisselles', 'lave vaisselles'],
+      'micro-ondes': ['microonde', 'micro ondes', 'four micro-ondes'],
+      'four': ['fours', 'four électrique', 'four electrique'],
+      'télévision': ['tv', 'téléviseur', 'television', 'televiseur'],
+      'ordinateur': ['pc', 'computer', 'laptop', 'portable'],
+      'réparation': ['reparer', 'réparer', 'reparation', 'fix', 'fixer'],
+    };
+    
+    // Ajouter les synonymes si trouvés
+    for (const [key, values] of Object.entries(synonyms)) {
+      if (lowerQuery.includes(key) || values.some(v => lowerQuery.includes(v))) {
+        terms.push(key, ...values);
+      }
+    }
+    
+    // Extraire les mots-clés importants (mots de plus de 3 caractères)
+    const words = lowerQuery.split(/\s+/).filter(w => w.length > 3);
+    terms.push(...words);
+    
+    return [...new Set(terms)]; // Supprimer les doublons
+  };
 
+  const searchPublications = (query) => {
+    if (!query || !query.trim()) return [];
+    
+    const allPublications = [...catalogPublications, ...publications];
+    if (allPublications.length === 0) return [];
+    
+    const searchTerms = getSearchTerms(query);
+    const lowerQuery = query.toLowerCase().trim();
+    
+    // Scoring des publications
+    const scoredPublications = allPublications.map(pub => {
+      let score = 0;
+      const pubTitle = (pub.title || '').toLowerCase();
+      const pubDescription = (pub.description || '').toLowerCase();
+      const pubType = (pub.type || '').toLowerCase();
+      const fullText = `${pubTitle} ${pubDescription} ${pubType}`;
+      
+      // Correspondance exacte dans le titre (score le plus élevé)
+      if (pubTitle === lowerQuery) {
+        score += 100;
+      } else if (pubTitle.includes(lowerQuery)) {
+        score += 50;
+      }
+      
+      // Correspondance exacte dans le type
+      if (pubType === lowerQuery) {
+        score += 80;
+      } else if (pubType.includes(lowerQuery)) {
+        score += 40;
+      }
+      
+      // Correspondance dans la description
+      if (pubDescription.includes(lowerQuery)) {
+        score += 20;
+      }
+      
+      // Recherche par mots-clés avec synonymes
+      searchTerms.forEach(term => {
+        if (pubTitle.includes(term)) score += 30;
+        if (pubType.includes(term)) score += 25;
+        if (pubDescription.includes(term)) score += 10;
+      });
+      
+      // Bonus si plusieurs termes correspondent
+      const matchingTerms = searchTerms.filter(term => 
+        pubTitle.includes(term) || pubType.includes(term) || pubDescription.includes(term)
+      );
+      if (matchingTerms.length > 1) {
+        score += matchingTerms.length * 5;
+      }
+      
+      return { publication: pub, score };
+    });
+    
+    // Filtrer et trier par score (seulement les publications avec score > 0)
+    const results = scoredPublications
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.publication);
+    
     return results;
   };
 
@@ -156,11 +236,10 @@ export const Chatbot = ({ isOpen, onClose }) => {
         if (searchResults.length > 0) {
           return formatPublicationMessage(searchResults);
         } else {
-          // Si aucune correspondance, afficher quand même quelques publications
-          const defaultResult = formatPublicationMessage(allPublications.slice(0, 5));
+          // Si aucune correspondance, ne pas afficher toutes les publications
           return {
-            text: `Je n'ai trouvé aucune publication correspondant exactement à "${userMessage}". Voici quelques publications disponibles :\n\n${defaultResult.text}`,
-            publications: defaultResult.publications
+            text: `Je n'ai trouvé aucune publication correspondant à "${userMessage}".\n\nEssayez de rechercher avec d'autres mots-clés comme : climatiseur, réfrigérateur, lave-linge, four, etc.\n\nOu tapez "catalogue" pour voir toutes les publications disponibles.`,
+            publications: []
           };
         }
       }
@@ -208,12 +287,29 @@ export const Chatbot = ({ isOpen, onClose }) => {
       };
     }
 
-    // Si le message contient des mots liés aux appareils électroménagers, proposer une recherche
-    const applianceKeywords = ['lave-linge', 'lave-vaisselle', 'réfrigérateur', 'four', 'micro-ondes', 'lave linge', 'lave vaisselle', 'machine', 'appareil'];
-    if (applianceKeywords.some(keyword => lowerMessage.includes(keyword)) && allPublications.length > 0) {
+    // Si le message contient des mots liés aux appareils électroménagers, faire une recherche intelligente
+    const applianceKeywords = [
+      'lave-linge', 'lave-vaisselle', 'réfrigérateur', 'four', 'micro-ondes', 
+      'lave linge', 'lave vaisselle', 'machine', 'appareil', 'climatiseur',
+      'climatisation', 'ac', 'air conditionné', 'frigo', 'télévision', 'tv',
+      'ordinateur', 'pc', 'laptop', 'portable', 'réparation', 'reparer'
+    ];
+    
+    // Vérifier si le message contient des mots-clés d'appareils ou semble être une recherche
+    const hasApplianceKeyword = applianceKeywords.some(keyword => lowerMessage.includes(keyword));
+    const isLikelySearch = lowerMessage.length > 3 && !lowerMessage.includes('?') && 
+                          (lowerMessage.split(' ').length <= 5 || hasApplianceKeyword);
+    
+    if ((hasApplianceKeyword || isLikelySearch) && allPublications.length > 0) {
       const searchResults = searchPublications(userMessage);
       if (searchResults.length > 0) {
         return formatPublicationMessage(searchResults);
+      } else if (hasApplianceKeyword) {
+        // Si c'est un mot-clé d'appareil mais aucun résultat, suggérer des alternatives
+        return {
+          text: `Je n'ai trouvé aucune publication correspondant à "${userMessage}".\n\nEssayez de rechercher avec d'autres termes ou tapez "catalogue" pour voir toutes les publications disponibles.`,
+          publications: []
+        };
       }
     }
 

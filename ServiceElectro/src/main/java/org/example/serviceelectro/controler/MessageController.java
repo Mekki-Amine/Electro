@@ -325,14 +325,12 @@ public class MessageController {
         return ResponseEntity.ok(messageDTOs);
     }
 
-    // Supprimer un message
+    // Supprimer un message (seul l'admin peut supprimer)
     @DeleteMapping("/{messageId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteMessage(
-            @PathVariable Long messageId,
-            @RequestParam Long userId) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteMessage(@PathVariable Long messageId) {
         try {
-            messageService.deleteMessage(messageId, userId);
+            messageService.deleteMessage(messageId);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -341,13 +339,12 @@ public class MessageController {
         }
     }
 
-    // Supprimer plusieurs messages
+    // Supprimer plusieurs messages (seul l'admin peut supprimer)
     @DeleteMapping("/bulk")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteMessages(
-            @RequestBody DeleteMessagesRequest request) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteMessages(@RequestBody DeleteMessagesRequest request) {
         try {
-            messageService.deleteMessages(request.getMessageIds(), request.getUserId());
+            messageService.deleteMessages(request.getMessageIds());
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -417,7 +414,6 @@ public class MessageController {
     // Classe interne pour la requête de suppression multiple
     public static class DeleteMessagesRequest {
         private List<Long> messageIds;
-        private Long userId;
 
         public List<Long> getMessageIds() {
             return messageIds;
@@ -425,14 +421,6 @@ public class MessageController {
 
         public void setMessageIds(List<Long> messageIds) {
             this.messageIds = messageIds;
-        }
-
-        public Long getUserId() {
-            return userId;
-        }
-
-        public void setUserId(Long userId) {
-            this.userId = userId;
         }
     }
 }

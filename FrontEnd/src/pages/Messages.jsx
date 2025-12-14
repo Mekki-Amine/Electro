@@ -180,7 +180,7 @@ const Messages = () => {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      await axios.delete(`/api/messages/${messageId}?userId=${user.userId}`, { headers });
+      await axios.delete(`/api/messages/${messageId}`, { headers });
       await fetchConversation();
     } catch (err) {
       alert('Erreur lors de la suppression du message');
@@ -198,8 +198,7 @@ const Messages = () => {
       
       await axios.delete('/api/messages/bulk', {
         data: {
-          messageIds,
-          userId: user.userId
+          messageIds
         },
         headers
       });
@@ -211,6 +210,7 @@ const Messages = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Empêcher la propagation de l'événement
     
     const hasContent = newMessage.trim().length > 0;
     const hasFile = selectedFile !== null;
@@ -357,27 +357,25 @@ const Messages = () => {
               </p>
             ) : (
               <>
-                {messages.filter(m => m.senderId === user.userId || m.receiverId === user.userId).length > 0 && (
+                {user?.role === 'ADMIN' && messages.length > 0 && (
                   <div className="mb-2 flex justify-end">
                     <button
                       onClick={() => {
-                        const userMessageIds = messages
-                          .filter(m => m.senderId === user.userId || m.receiverId === user.userId)
-                          .map(m => m.id);
-                        if (userMessageIds.length > 0) {
-                          handleDeleteMultipleMessages(userMessageIds);
+                        const allMessageIds = messages.map(m => m.id);
+                        if (allMessageIds.length > 0) {
+                          handleDeleteMultipleMessages(allMessageIds);
                         }
                       }}
                       className="text-xs text-red-600 hover:text-red-800 underline"
                     >
-                      Supprimer tous mes messages
+                      Supprimer tous les messages
                     </button>
                   </div>
                 )}
                 {messages.map((message) => {
                 const isUser = message.senderId === user.userId;
                 const senderId = isUser ? user.userId : adminId;
-                const canDelete = message.senderId === user.userId || message.receiverId === user.userId;
+                const canDelete = user?.role === 'ADMIN'; // Seul l'admin peut supprimer
                 return (
                   <div
                     key={message.id}
@@ -481,7 +479,7 @@ const Messages = () => {
 
           {/* Formulaire d'envoi */}
           {adminId && (
-            <form onSubmit={handleSendMessage}>
+            <form onSubmit={handleSendMessage} noValidate>
               {/* Prévisualisation du fichier */}
               {filePreview && (
                 <div className="mb-2 relative inline-block">
@@ -550,6 +548,12 @@ const Messages = () => {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(e);
+                      }
+                    }}
                     placeholder="Tapez votre message..."
                     className="flex-1 px-2 py-2 focus:outline-none"
                     disabled={sending || !adminId}

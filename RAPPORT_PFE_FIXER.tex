@@ -1,0 +1,970 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\leftmark}
+\fancyhead[R]{\thepage}
+\fancyfoot[C]{Rapport de Projet de Fin d'Études - Fixer}
+
+% Configuration des couleurs pour le code
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+
+\begin{document}
+
+% Page de garde
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+
+\textbf{\Large République Tunisienne}\\
+\textbf{\Large Ministère de l'Enseignement Supérieur}\\
+\textbf{\Large et de la Recherche Scientifique}\\
+\textbf{\Large Université SESAME}
+
+\vspace{2cm}
+
+\textbf{\Huge RAPPORT DE PROJET DE FIN D'ÉTUDE}
+
+\vspace{1cm}
+
+Présenté en vue de l'obtention du\\
+\textbf{Diplôme de licence en Science de l'Informatique}
+
+\vspace{2cm}
+
+\textbf{\Large [Votre Nom]}
+
+\vspace{1cm}
+
+au sein de\\
+\textbf{\Large Fixer - Service de Réparation Électronique}
+
+\vspace{2cm}
+
+\textbf{\Large Mise en Place d'une Plateforme Web}\\
+\textbf{\Large de Gestion de Services de Réparation}\\
+\textbf{\Large d'Électroménagers}
+
+\vspace{2cm}
+
+Encadrant Académique : [Nom Encadrant Académique]\\
+Encadrant Entreprise : [Nom Encadrant Entreprise]
+
+\vspace{2cm}
+
+\textbf{Année Universitaire : 2024 - 2025}
+
+\end{titlepage}
+
+% Dédicaces
+\newpage
+\chapter*{Dédicaces}
+\addcontentsline{toc}{chapter}{Dédicaces}
+
+\section*{À ma mère}
+L'ange de ma vie, la plus tendre, la plus généreuse, la plus honorable... toujours prête à tout donner, à tout pardonner. Pour tes encouragements et tes prières.
+
+Que Dieu te protège et te procure santé et longue vie.
+
+\section*{À mon père}
+La personne la plus chère à mon cœur. Le plus courageux, respectueux... Pour ton amour et tes sacrifices. Que Dieu te préserve et te procure santé et longue vie.
+
+\section*{À ma sœur}
+Un modèle de gentillesse, de générosité et de soutien inconditionnel. Pour ta présence constante, tes encouragements et ton amour inestimable. Que Dieu t'accorde bonheur, santé et réussite dans tout ce que tu entreprends.
+
+\section*{À mes chers frères}
+En témoignage de mon affection fraternelle, de ma profonde tendresse et reconnaissance, je vous souhaite une vie pleine de bonheur et de succès, et que Dieu, le tout puissant, vous protège et vous garde.
+
+\section*{À moi-même, pour toutes les nuits blanches...}
+
+\section*{À mes amis et toutes personnes qui me sont chères}
+Avec qui j'ai passé mes meilleurs moments, avec qui j'ai partagé des souvenirs. Amis pour la vie, amis pour toujours. Je vous aime.
+
+% Remerciements
+\newpage
+\chapter*{Remerciements}
+\addcontentsline{toc}{chapter}{Remerciements}
+
+Je tiens à remercier vivement mon encadrant professionnel [Nom Encadrant Entreprise] pour son accueil, et sa prise en charge jusqu'à la fin de stage.
+
+J'exprime ma sincère gratitude et ma profonde reconnaissance à mon encadreur académique, [Nom Encadrant Académique], pour ses remarques, ses précieux conseils, sa bienveillance, sa disponibilité et surtout pour sa confiance.
+
+Enfin, un grand merci à ma famille et mes amis qui m'ont soutenu tout au long de ce stage.
+
+% Table des matières
+\newpage
+\tableofcontents
+
+% Liste des figures
+\newpage
+\listoffigures
+
+% Liste des tableaux
+\newpage
+\listoftables
+
+% Introduction Générale
+\chapter{Introduction Générale}
+
+Dans un contexte où la digitalisation transforme profondément le secteur des services, les plateformes web de mise en relation entre clients et prestataires de services connaissent un essor considérable. L'émergence des applications web transactionnelles et des services en ligne traduit un besoin croissant d'autonomie, de rapidité et de transparence dans la gestion des services de réparation d'électroménagers.
+
+Notre projet de fin d'études s'inscrit dans cette dynamique de transformation digitale, avec une attention particulière portée à la modernisation des services de réparation d'appareils électroménagers. Réalisé dans le cadre du développement d'une plateforme web moderne, ce projet a pour objectif le développement d'une application web sécurisée et intuitive, permettant aux utilisateurs de publier des demandes de réparation, consulter un catalogue de services, communiquer via un système de messagerie, gérer un panier d'achat, et recevoir des notifications en temps réel.
+
+Le système intègre également un volet d'administration permettant aux administrateurs de gérer les publications, valider ou refuser les demandes, et superviser l'ensemble de la plateforme via une interface dédiée.
+
+Ce projet présente une forte valeur ajoutée, tant sur le plan fonctionnel (gestion complète des services de réparation) que technique, en intégrant des éléments essentiels tels que la sécurité (authentification JWT, Google OAuth), l'ergonomie de l'interface, ainsi qu'une architecture modulaire respectant les bonnes pratiques du développement web. L'architecture logicielle repose sur une séparation en couches (présentation, métier, persistance, sécurité), tandis que l'architecture physique suit une structure trois tiers (client, serveur d'application, base de données MySQL).
+
+Le développement a été mené selon une approche agile, avec une organisation en sprints successifs. Cette méthode a permis une évolution incrémentale de la solution, une meilleure gestion des priorités et une intégration continue des retours utilisateurs et des contraintes métier. Chaque sprint visait à livrer un sous-ensemble cohérent et opérationnel du système.
+
+Ce rapport retrace l'ensemble des étapes du projet, depuis l'analyse des besoins jusqu'à la mise en œuvre technique, en passant par la modélisation UML, la conception fonctionnelle, l'élaboration des architectures, et l'implémentation dans un environnement réel.
+
+La structure de ce document est la suivante :
+\begin{itemize}
+    \item Le Chapitre 1 présente le contexte du projet, l'organisme d'accueil, l'existant ainsi que la méthodologie de travail adoptée,
+    \item Le Chapitre 2 est consacré à l'analyse des besoins fonctionnels et non fonctionnels, à l'identification des acteurs, et à la modélisation UML, y compris l'architecture logique et physique de l'application,
+    \item Les Chapitres 3 à 6 détaillent le déroulement des différents sprints, avec pour chacun les objectifs, le backlog, la conception, les cas d'utilisation, les maquettes, l'implémentation, les tests et les résultats,
+    \item Enfin, une conclusion générale et des perspectives viennent clore ce travail en proposant des pistes d'amélioration et d'évolution.
+\end{itemize}
+
+À travers ce projet, nous avons mobilisé nos compétences en ingénierie logicielle, modélisation orientée objet, développement web full-stack, sécurité des systèmes, et gestion de projet agile, tout en nous confrontant aux réalités concrètes d'un environnement professionnel exigeant.
+
+% Chapitre 1 : Contexte et objectifs du projet
+\chapter{Contexte et objectifs du projet}
+
+\section{Introduction}
+
+Ce chapitre introductif vise à situer notre projet dans son contexte général. Dans un premier temps, nous présentons l'organisme d'accueil en décrivant son secteur d'activité et ses principaux objectifs. Par la suite, nous abordons l'étude des solutions existantes et leurs points critiques, avant de présenter la solution envisagée pour y répondre. Enfin, nous décrivons la méthodologie adoptée pour guider le développement et la mise en œuvre de notre projet.
+
+\section{Présentation de l'organisme d'accueil}
+
+\subsection{Présentation de Fixer}
+
+Fixer est une plateforme web moderne de gestion de services de réparation d'électroménagers. La plateforme vise à faciliter la mise en relation entre les clients ayant besoin de services de réparation et les réparateurs professionnels. Elle offre une solution complète permettant aux utilisateurs de publier des demandes, consulter un catalogue de services, communiquer via un système de messagerie, et gérer leurs transactions.
+
+\subsection{Secteurs d'activité}
+
+La plateforme Fixer opère dans le secteur des services de réparation d'appareils électroménagers, couvrant notamment :
+\begin{itemize}
+    \item La réparation de lave-linge, lave-vaisselle, réfrigérateurs
+    \item La réparation de fours, micro-ondes, climatiseurs
+    \item La réparation de télévisions et autres appareils électroniques
+    \item La mise en relation entre clients et réparateurs
+    \item La gestion de catalogue de services vérifiés
+\end{itemize}
+
+\subsection{Étude de l'existant}
+
+\subsubsection{Définition d'un système de gestion de services de réparation}
+
+Un système de gestion de services de réparation est un dispositif numérique permettant aux clients de publier des demandes de réparation, consulter un catalogue de services disponibles, communiquer avec les réparateurs, et gérer leurs transactions. Ces systèmes visent à offrir une expérience client améliorée en facilitant l'accès aux services de réparation, tout en garantissant la sécurité et la confidentialité des données.
+
+\subsubsection{Description de l'existant}
+
+Les solutions existantes dans le domaine des services de réparation présentent généralement les fonctionnalités suivantes :
+\begin{itemize}
+    \item Publication de demandes de réparation
+    \item Consultation de catalogues de services
+    \item Systèmes de messagerie basiques
+    \item Gestion de profils utilisateurs
+\end{itemize}
+
+Toutefois, ces solutions présentent souvent des limitations en termes d'ergonomie, de sécurité, et de fonctionnalités avancées.
+
+\subsubsection{Critique de l'existant}
+
+Malgré les nombreux avantages offerts par les solutions existantes, plusieurs limitations ont été identifiées :
+\begin{itemize}
+    \item \textbf{Personnalisation limitée} : Les utilisateurs ne disposent pas de la possibilité de personnaliser pleinement leurs services selon leurs préférences spécifiques.
+    \item \textbf{Interface perfectible} : L'ergonomie des plateformes pourrait être améliorée pour offrir une navigation plus intuitive.
+    \item \textbf{Absence de système de panier} : Les clients ne peuvent pas gérer un panier d'achat pour regrouper plusieurs services.
+    \item \textbf{Système de notifications limité} : Les notifications ne sont pas toujours en temps réel ou complètes.
+    \item \textbf{Sécurité et évolutivité} : Bien que des standards de sécurité soient appliqués, le renforcement constant des dispositifs de protection est indispensable.
+\end{itemize}
+
+\subsubsection{Solution proposée}
+
+Afin de surmonter les limites constatées dans les solutions existantes, notre projet propose de développer une nouvelle plateforme digitale répondant aux objectifs suivants :
+\begin{itemize}
+    \item \textbf{Autonomie complète} : Les clients peuvent gérer de manière autonome leurs publications, demandes, et transactions.
+    \item \textbf{Amélioration de l'ergonomie} : Interfaces intuitives, responsive, avec une expérience utilisateur fluide sur différents formats d'écran.
+    \item \textbf{Sécurité renforcée} : Mise en œuvre de mécanismes fiables de gestion du token utilisateur (JWT) et authentification Google OAuth pour sécuriser les actions sensibles.
+    \item \textbf{Système de panier} : Gestion complète d'un panier d'achat permettant de regrouper plusieurs services.
+    \item \textbf{Notifications en temps réel} : Système de notifications complet pour informer les utilisateurs des mises à jour importantes.
+    \item \textbf{Chatbot intelligent} : Assistant virtuel pour guider les utilisateurs dans leurs démarches et faciliter la recherche dans le catalogue.
+\end{itemize}
+
+\subsection{Méthodologie de travail}
+
+Pour la réalisation de notre solution, nous avons choisi la méthode Agile pour la conception et le développement de notre système. Cette décision a été prise en raison des nombreux avantages offerts par cette approche, qui correspond parfaitement à la structure de notre projet de fin d'études.
+
+\subsubsection{Méthode Agile}
+
+La méthode Agile favorise les valeurs du Manifeste Agile : l'acceptation du changement, la collaboration avec le client et l'interaction entre les personnes et les logiciels opérationnels. Cette méthode vise à définir un cadre de travail clair basé sur des itérations courtes pour faciliter la mise en œuvre de projets complexes.
+
+\subsubsection{Les rôles dans Agile}
+
+La méthode agile fait intervenir plusieurs rôles principaux :
+\begin{itemize}
+    \item \textbf{Product Owner} : Responsable de l'identification des besoins, chargé de rédiger les spécifications, de définir et de hiérarchiser les "user stories" pour chaque sprint.
+    \item \textbf{Scrum Master} : Responsable de projet jouant un rôle crucial dans la supervision de l'application de la méthodologie agile. Il veille à ce que les objectifs de la méthode soient respectés tout en surveillant la progression du projet.
+    \item \textbf{L'équipe de développement} : Les personnes qui travaillent sous la direction du Scrum Master pour transformer les besoins identifiés par le Product Owner en fonctionnalités précises et utiles.
+\end{itemize}
+
+\subsection{Langage de modélisation}
+
+Afin de spécifier, visualiser, comprendre et construire les documents nécessaires pour un bon développement de notre application, nous avons choisi le langage de modélisation unifié (UML), en anglais Unified Modeling Language. UML est un langage de modélisation graphique à base de pictogrammes, une représentation graphique schématique, conçu pour fournir une méthode normalisée pour visualiser la conception d'un système.
+
+\section{Conclusion}
+
+Ce chapitre a présenté une vue d'ensemble du contexte de notre travail. Nous avons d'abord introduit l'organisme d'accueil, puis proposé une définition générale d'un système de gestion de services de réparation, en analysant les solutions existantes afin d'identifier leurs limites et d'orienter notre réflexion vers une approche plus pratique, conviviale et innovante. Ensuite, nous avons exposé la méthodologie de travail adoptée pour la réalisation de notre projet. Dans le prochain chapitre, nous détaillerons les différents besoins fonctionnels et non fonctionnels de notre système.
+
+% Chapitre 2 : Analyse et spécification des besoins
+\chapter{Analyse et spécification des besoins}
+
+\section{Introduction}
+
+L'étape d'analyse et de spécification des besoins constitue une phase essentielle du cycle de développement logiciel. Elle vise à identifier et formaliser les fonctionnalités attendues du système ainsi que les contraintes à respecter.
+
+Dans ce chapitre, nous commençons par présenter les acteurs qui interagiront avec la plateforme. Ensuite, nous analysons les besoins fonctionnels et non fonctionnels, en détaillant les services clés à implémenter ainsi que les exigences de performance, d'ergonomie et de sécurité.
+
+\section{Les besoins fonctionnels}
+
+Les besoins fonctionnels représentent les services essentiels que le système doit fournir pour satisfaire les attentes des utilisateurs (clients, réparateurs et administrateurs). Ils couvrent l'ensemble des fonctionnalités déployées :
+
+\begin{itemize}
+    \item \textbf{Gestion des utilisateurs} : Permettre aux utilisateurs de s'inscrire, se connecter, gérer leur profil, avec authentification sécurisée via JWT et Google OAuth.
+    \item \textbf{Gestion des publications} : L'application permet aux clients de publier des demandes de réparation avec description, type d'appareil, prix, et fichiers joints. Les administrateurs peuvent valider ou refuser ces publications.
+    \item \textbf{Catalogue de services} : Consultation d'un catalogue de services vérifiés, avec recherche avancée, filtres par type, prix, et statut.
+    \item \textbf{Système de messagerie} : Communication entre utilisateurs via un système de messagerie en temps réel.
+    \item \textbf{Gestion du panier} : Les clients peuvent ajouter des services à un panier, consulter leur panier, et procéder à l'achat.
+    \item \textbf{Système de notifications} : Notifications en temps réel pour informer les utilisateurs des mises à jour importantes (validation de publication, nouveaux messages, etc.).
+    \item \textbf{Chatbot intelligent} : Assistant virtuel permettant de rechercher dans le catalogue, répondre aux questions fréquentes, et guider les utilisateurs.
+    \item \textbf{Gestion administrative} : Interface d'administration permettant de gérer les utilisateurs, publications, messages, et notifications.
+\end{itemize}
+
+\section{Les besoins non fonctionnels}
+
+Les besoins non fonctionnels désignent les contraintes techniques, de performance et d'expérience utilisateur que l'application doit respecter :
+
+\begin{itemize}
+    \item \textbf{Performance} : L'application doit offrir des performances élevées, avec un temps de réponse rapide lors de la navigation et des actions.
+    \item \textbf{Ergonomie} : L'application doit être intuitive et facile à utiliser, avec une interface claire, fluide et adaptée aux différents profils d'utilisateurs.
+    \item \textbf{Accessibilité} : L'application doit être responsive et garantir une expérience utilisateur cohérente sur divers formats d'écran (ordinateur, tablette, mobile).
+    \item \textbf{Sécurité} : Authentification sécurisée via JWT, chiffrement des mots de passe avec BCrypt, validation des données, et protection contre les attaques courantes.
+    \item \textbf{Évolutivité} : Architecture modulaire permettant l'ajout facile de nouvelles fonctionnalités.
+\end{itemize}
+
+\section{Identification des acteurs}
+
+Les acteurs sont les utilisateurs qui interagissent avec le système. Dans notre plateforme, les acteurs principaux sont définis comme suit :
+
+\begin{itemize}
+    \item \textbf{Client} : Toute personne accédant à la plateforme pour publier des demandes de réparation, consulter le catalogue, utiliser le panier, et communiquer avec les réparateurs.
+    \item \textbf{Administrateur} : Utilisateur ayant des privilèges étendus pour superviser la plateforme. Il est chargé de valider ou refuser les publications, de gérer les utilisateurs, les messages, et de s'assurer du bon fonctionnement des services proposés.
+\end{itemize}
+
+\section{Modélisation des besoins}
+
+\subsection{Diagramme de cas d'utilisation global}
+
+Le diagramme de cas d'utilisation a pour objectif de définir les attentes de chaque utilisateur vis-à-vis du système. Il représente l'interaction entre les utilisateurs et les fonctionnalités prévues du système.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/diagrammes/cas_utilisation.png}
+\caption{Diagramme de cas d'utilisation global}
+\label{fig:cas_utilisation}
+\end{figure}
+
+\subsection{Diagramme de classe global}
+
+Le diagramme de classe suivant présente les principales entités du système, leurs attributs et les relations entre elles. Il constitue une base essentielle pour la conception de la base de données et des objets manipulés par l'application.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/diagrammes/classes.png}
+\caption{Diagramme de classe global}
+\label{fig:classes}
+\end{figure}
+
+\section{Élaboration du Backlog produit}
+
+Le backlog produit est une liste ordonnée et mise à jour régulièrement, créée et maintenue par le Product Owner. Il contient les fonctionnalités, les tâches et les éléments à réaliser par l'équipe de développement pour atteindre les objectifs du projet.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|l|c|c|}
+\hline
+\textbf{ID} & \textbf{Fonctionnalité} & \textbf{Priorité} & \textbf{Sprint} \\
+\hline
+1 & S'inscrire dans la plateforme & Haute & Sprint 1 \\
+2 & Se connecter à la plateforme & Haute & Sprint 1 \\
+3 & Gérer son profil utilisateur & Haute & Sprint 1 \\
+4 & Publier une demande de réparation & Haute & Sprint 2 \\
+5 & Consulter le catalogue de services & Haute & Sprint 2 \\
+6 & Rechercher dans le catalogue & Moyenne & Sprint 2 \\
+7 & Ajouter un service au panier & Haute & Sprint 3 \\
+8 & Gérer le panier d'achat & Haute & Sprint 3 \\
+9 & Envoyer un message & Haute & Sprint 3 \\
+10 & Consulter les messages & Haute & Sprint 3 \\
+11 & Recevoir des notifications & Moyenne & Sprint 4 \\
+12 & Utiliser le chatbot & Moyenne & Sprint 4 \\
+13 & Valider/Refuser une publication (Admin) & Haute & Sprint 2 \\
+14 & Gérer les utilisateurs (Admin) & Haute & Sprint 3 \\
+15 & Gérer les messages (Admin) & Moyenne & Sprint 4 \\
+\hline
+\end{tabular}
+\caption{Backlog produit du projet}
+\end{table}
+
+\section{Architecture générale de l'application}
+
+\subsection{Architecture logicielle}
+
+L'architecture logicielle présente la structure globale de l'application. Elle décrit les principaux éléments qui composent le logiciel et la façon de regrouper ces composants selon le type de fonction et de traitements qu'ils effectuent.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/diagrammes/architecture_logicielle.png}
+\caption{Architecture logicielle de l'application}
+\label{fig:arch_logicielle}
+\end{figure}
+
+La figure \ref{fig:arch_logicielle} illustre l'architecture en trois couches de l'application :
+\begin{itemize}
+    \item \textbf{Couche Présentation} : React Components + Tailwind CSS (Frontend)
+    \item \textbf{Couche Logique Métier} : Spring Boot + Spring Security (Backend)
+    \item \textbf{Couche Données} : MySQL Database
+\end{itemize}
+
+Cette architecture favorise une séparation claire des responsabilités, réutilisabilité et évolutivité. Les différentes couches de l'architecture sont :
+
+\begin{itemize}
+    \item \textbf{La couche présentation} : Elle correspond à l'aspect visuel et interactif de l'application. Elle est responsable de l'affichage des données pour les utilisateurs. Elle fait appel à la couche métier pour répondre aux requêtes du client.
+    \item \textbf{La couche métier} : Elle correspond à l'aspect fonctionnel de l'application, elle contient tous les traitements métiers que l'application opère sur les données en fonction des requêtes des utilisateurs.
+    \item \textbf{La couche persistance} : Elle gère l'accès aux données persistantes de l'application. La couche Repository encapsulée dans la couche DAO décrit l'accès aux données à travers une couche d'abstraction commune à des multiples sources de données.
+    \item \textbf{La couche sécurité} : Elle correspond à l'aspect sécurité de l'application.
+\end{itemize}
+
+\subsection{Architecture physique}
+
+L'architecture physique décrit l'ensemble des composants matériels et logiciels sur lesquels l'application est déployée. Notre application adopte une architecture trois tiers :
+
+\begin{itemize}
+    \item \textbf{Client léger} : Il s'agit du navigateur web à partir duquel les utilisateurs accèdent à l'application. Il exécute la partie frontend développée avec React.
+    \item \textbf{Serveur d'application} : Il héberge le backend développé avec Spring Boot. Ce serveur traite les requêtes métiers, applique les règles de gestion, et interagit avec la base de données.
+    \item \textbf{Serveur de base de données} : Il repose sur MySQL. Ce serveur assure le stockage des données (utilisateurs, publications, messages, notifications, etc.) de façon fiable et sécurisée.
+\end{itemize}
+
+\section{Environnement de travail}
+
+\subsection{Environnement matériel}
+
+Notre application a été élaborée et codée sur une machine dotée des caractéristiques techniques suivantes :
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Caractéristique} & \textbf{Valeur} \\
+\hline
+Processeur & Intel Core i7 ou équivalent \\
+Mémoire RAM & 16 Go minimum \\
+Disque Dur & SSD 512 Go minimum \\
+Système d'exploitation & Windows 10/11 ou Linux \\
+\hline
+\end{tabular}
+\caption{Caractéristiques du poste de travail}
+\end{table}
+
+\subsection{Environnement logiciel}
+
+L'environnement logiciel regroupe les outils et technologies utilisés pour concevoir, développer, tester et exécuter le projet.
+
+\subsubsection{Environnement de développement}
+
+Pour le développement de l'application, nous avons utilisé les outils suivants :
+\begin{itemize}
+    \item \textbf{Visual Studio Code} : éditeur de code pour le développement front-end (React).
+    \item \textbf{IntelliJ IDEA} : environnement intégré utilisé pour le développement back-end (Spring Boot).
+    \item \textbf{Postman} : outil d'interrogation des API REST pour les tests fonctionnels.
+    \item \textbf{MySQL Workbench} : interface graphique pour la gestion de la base de données relationnelle MySQL.
+    \item \textbf{Git} : pour le versioning et la gestion du code source via GitHub.
+\end{itemize}
+
+\subsubsection{Langages de programmation}
+
+Le développement a été réalisé à l'aide des langages suivants :
+\begin{itemize}
+    \item \textbf{Java} : utilisé côté back-end avec le framework Spring Boot.
+    \item \textbf{JavaScript/JSX} : utilisés pour le développement de l'interface utilisateur React.
+    \item \textbf{SQL} : pour les requêtes et la gestion des données avec MySQL.
+\end{itemize}
+
+\subsubsection{Frameworks et bibliothèques utilisés}
+
+Nous avons utilisé plusieurs frameworks pour accélérer le développement et garantir une architecture robuste :
+\begin{itemize}
+    \item \textbf{Spring Boot} : framework Java pour le développement d'applications back-end RESTful.
+    \item \textbf{React} : framework front-end pour la création d'une interface dynamique et responsive.
+    \item \textbf{Tailwind CSS} : bibliothèque CSS pour assurer une interface ergonomique et responsive.
+    \item \textbf{Spring Security + JWT} : pour la gestion sécurisée de l'authentification et des rôles.
+\end{itemize}
+
+\section{Conclusion}
+
+Ce chapitre a permis de poser les fondations du projet en définissant de manière claire les besoins à couvrir, les fonctionnalités à implémenter, les utilisateurs cibles et les contraintes techniques à respecter.
+
+Nous avons modélisé les interactions via des diagrammes UML, établi le backlog produit, et décrit l'architecture choisie pour garantir modularité, maintenabilité et performance. L'environnement matériel et logiciel utilisé a également été précisé afin d'assurer la reproductibilité et la compatibilité des développements.
+
+% Chapitre 3 : Sprint 1
+\chapter{Sprint 1}
+
+\section{Introduction}
+
+Dans ce chapitre, nous présentons les principales fonctionnalités développées au cours du premier sprint, en particulier l'authentification sécurisée de l'utilisateur et la gestion des profils. Nous commençons par établir le backlog du sprint, en listant les tâches à réaliser et en définissant leur niveau de priorité. Ensuite, nous décrivons les étapes de conception à l'aide de diagrammes UML, ainsi que la phase de réalisation.
+
+\section{Objectifs du sprint 1}
+
+Ce sprint vise à créer un système d'authentification sécurisé pour les clients et les administrateurs. Ce système gère les rôles, vérifie la validité des informations saisies grâce à un mécanisme de validation, et affiche les interfaces appropriées selon le type d'utilisateur après la connexion. Pour cela, nous utilisons la méthode d'authentification par JWT (JSON Web Token) et Google OAuth.
+
+\section{Backlog du sprint 1}
+
+Le backlog du premier sprint contient la liste des tâches identifiées qui doivent être réalisées avant la fin du sprint.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{User story} & \textbf{Priorité} & \textbf{Estimation} \\
+\hline
+S'inscrire sur la plateforme & Haute & 1 semaine \\
+Se connecter à la plateforme & Haute & 1 semaine \\
+Gérer son profil utilisateur & Haute & 1 semaine \\
+\hline
+\end{tabular}
+\caption{Backlog du sprint 1}
+\end{table}
+
+\section{Raffinement des cas d'utilisation}
+
+\subsection{Cas d'utilisation : S'inscrire}
+
+Ce cas d'utilisation permet à un client ou un administrateur de créer un compte utilisateur sur la plateforme. L'inscription se fait via un formulaire de saisie des informations personnelles. Le système vérifie les champs obligatoires et crée un nouveau compte si toutes les données sont valides.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Acteurs} & Client, Administrateur \\
+\hline
+\textbf{Préconditions} & L'utilisateur ne possède pas encore de compte. \\
+\hline
+\textbf{Postconditions (succès)} & Le compte utilisateur est créé avec succès. \\
+\hline
+\textbf{Scénario principal} & 1. L'utilisateur accède à la page d'inscription. \\
+& 2. Il saisit les informations demandées. \\
+& 3. Il valide le formulaire. \\
+& 4. Le système vérifie les champs et enregistre le compte. \\
+& 5. Un message de confirmation s'affiche. \\
+\hline
+\end{tabular}
+\caption{Cas d'utilisation - S'inscrire}
+\end{table}
+
+\subsection{Cas d'utilisation : S'authentifier}
+
+Le cas d'utilisation « S'authentifier » constitue un point d'entrée fondamental du système, permettant aux clients et administrateurs d'accéder à leur espace personnel via une authentification sécurisée. L'interface de connexion est conçue de manière à être intuitive, avec un système de validation côté frontend et backend.
+
+Lors de la tentative de connexion, l'utilisateur saisit son email et son mot de passe, ou utilise Google OAuth. Le système valide ces informations via un mécanisme d'authentification basé sur JWT (JSON Web Token). En cas de succès, un jeton est généré pour sécuriser la session.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Acteurs} & Client, Administrateur \\
+\hline
+\textbf{Préconditions} & L'utilisateur dispose d'identifiants valides. \\
+\hline
+\textbf{Postconditions (succès)} & L'utilisateur est connecté à son espace personnel. \\
+& Un token JWT est généré pour sécuriser la session. \\
+\hline
+\textbf{Scénario principal} & 1. L'utilisateur accède à la page de connexion. \\
+& 2. Il saisit ses identifiants ou utilise Google OAuth. \\
+& 3. Le système vérifie les informations. \\
+& 4. Si la vérification est réussie, l'utilisateur est redirigé \\
+& vers son espace personnel. \\
+\hline
+\end{tabular}
+\caption{Cas d'utilisation - S'authentifier}
+\end{table}
+
+\section{Conception du Sprint 1}
+
+La phase de conception du Sprint 1 vise à modéliser les échanges entre les différents composants de l'application à travers des diagrammes de séquence. Chaque diagramme détaille les interactions entre l'utilisateur, l'interface frontend, les contrôleurs backend, les services et la base de données, selon le cas d'utilisation concerné.
+
+\subsection{Diagramme de séquence : S'authentifier}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/diagrammes/sequence_authentification.png}
+\caption{Diagramme de séquence - Cas d'utilisation « S'authentifier »}
+\label{fig:seq_auth}
+\end{figure}
+
+\subsection{Diagramme de séquence : S'inscrire}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/diagrammes/sequence_inscription.png}
+\caption{Diagramme de séquence - Cas d'utilisation « S'inscrire »}
+\label{fig:seq_inscription}
+\end{figure}
+
+\section{Implémentation}
+
+Cette section présente les interfaces utilisateur développées durant le Sprint 1. Chaque interface correspond à un cas d'utilisation spécifique du système.
+
+\subsection{Cas d'utilisation : S'inscrire}
+
+Cette interface permet à un utilisateur de s'inscrire sur la plateforme en remplissant un formulaire contenant ses informations personnelles (nom, prénom, email, mot de passe, etc.).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/screenshots/inscription.png}
+\caption{Interface d'inscription sur la plateforme}
+\label{fig:inscription}
+\end{figure}
+
+\subsection{Cas d'utilisation : S'authentifier}
+
+Cette interface de connexion permet à l'utilisateur de s'authentifier via son adresse e-mail et son mot de passe, ou via Google OAuth. Après une authentification réussie, il est redirigé automatiquement vers son espace personnel selon son rôle (Client ou Administrateur).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/screenshots/authentification.png}
+\caption{Interface d'authentification}
+\label{fig:authentification}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/screenshots/authentification_google.png}
+\caption{Authentification via Google OAuth}
+\label{fig:auth_google}
+\end{figure}
+
+\section{Conclusion}
+
+Cette première phase de développement a permis de mettre en place une base solide pour notre application, avec un système d'authentification sécurisé et une interface intuitive pour la gestion des profils utilisateurs. Les fonctionnalités prévues ont été implémentées avec succès, assurant une première version fonctionnelle du parcours utilisateur.
+
+% Chapitre 4 : Sprint 2
+\chapter{Sprint 2}
+
+\section{Introduction}
+
+Dans ce chapitre, nous présentons l'ajout de fonctionnalités essentielles pour la gestion des publications et du catalogue. Ces fonctionnalités permettent aux clients de publier des demandes de réparation et de consulter un catalogue de services, tout en offrant aux administrateurs la possibilité de valider ou refuser les publications.
+
+\section{Objectif du Sprint}
+
+L'objectif principal de cette phase est de permettre aux clients de publier des demandes de réparation avec description, type d'appareil, prix, et fichiers joints. Elle vise également à fournir un catalogue de services vérifiés avec recherche et filtres, ainsi qu'aux administrateurs les outils nécessaires pour consulter ces publications, les valider ou les refuser.
+
+\section{Backlog du sprint 2}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{User Story} & \textbf{Priorité} & \textbf{Estimation} \\
+\hline
+Publier une demande de réparation & Haute & 1 semaine \\
+Consulter le catalogue de services & Haute & 1 semaine \\
+Rechercher dans le catalogue & Moyenne & 1 semaine \\
+Valider/Refuser une publication (Admin) & Haute & 1 semaine \\
+\hline
+\end{tabular}
+\caption{Backlog du sprint 2}
+\end{table}
+
+\section{Raffinement des cas d'utilisation}
+
+\subsection{Cas d'utilisation : Publier une demande de réparation}
+
+Ce cas d'utilisation permet à un client connecté de publier une demande de réparation via un formulaire dédié. Le système permet la saisie des informations nécessaires (titre, description, type d'appareil, prix, statut) et effectue les vérifications nécessaires avant d'enregistrer la publication.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Acteur} & Client \\
+\hline
+\textbf{Préconditions} & Le client est authentifié. \\
+\hline
+\textbf{Postconditions (succès)} & La publication est créée avec succès et enregistrée \\
+& dans la base de données avec le statut "En attente". \\
+\hline
+\textbf{Scénario principal} & 1. Le client accède à la page de publication. \\
+& 2. Il saisit les informations requises. \\
+& 3. Il valide le formulaire. \\
+& 4. Le système enregistre les données et affiche une confirmation. \\
+\hline
+\end{tabular}
+\caption{Cas d'utilisation - Publier une demande de réparation}
+\end{table}
+
+\subsection{Cas d'utilisation : Consulter le catalogue}
+
+Ce cas d'utilisation permet aux utilisateurs de consulter un catalogue de services vérifiés, avec possibilité de recherche et de filtrage par type, prix, et statut.
+
+\subsection{Cas d'utilisation : Gérer les publications (Administrateur)}
+
+Ce cas d'utilisation permet à l'administrateur de consulter toutes les publications, puis de valider, refuser ou supprimer chaque publication.
+
+\section{Conception du Sprint 2}
+
+La phase de conception du Sprint 2 vise à modéliser les interactions fonctionnelles autour des publications et du catalogue.
+
+\section{Implémentation}
+
+Cette section illustre les principales interfaces utilisateur développées durant le Sprint 2.
+
+\subsection{Cas d'utilisation : Publier une demande de réparation}
+
+L'interface suivante permet au client de publier une demande de réparation via un formulaire dédié.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/screenshots/publication.png}
+\caption{Interface de publication d'une demande de réparation}
+\label{fig:publication}
+\end{figure}
+
+\subsection{Cas d'utilisation : Consulter le catalogue}
+
+Cette interface permet aux utilisateurs de consulter le catalogue de services vérifiés avec recherche et filtres.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/screenshots/catalogue.png}
+\caption{Interface du catalogue de services}
+\label{fig:catalogue}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/screenshots/catalogue_recherche.png}
+\caption{Recherche et filtres dans le catalogue}
+\label{fig:catalogue_recherche}
+\end{figure}
+
+\subsection{Cas d'utilisation : Gestion des publications (Administrateur)}
+
+Cette interface permet à l'administrateur de gérer toutes les publications soumises par les utilisateurs.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/screenshots/admin_publications.png}
+\caption{Interface d'administration - Gestion des publications}
+\label{fig:admin_pub}
+\end{figure}
+
+\section{Conclusion}
+
+Le Sprint 2 a permis d'enrichir significativement la plateforme en intégrant les fonctionnalités de publication et de catalogue. Les clients disposent désormais d'interfaces claires pour publier leurs demandes et consulter les services disponibles, tandis que les administrateurs peuvent les gérer via une interface dédiée.
+
+% Chapitre 5 : Sprint 3
+\chapter{Sprint 3}
+
+\section{Introduction}
+
+Dans ce chapitre, nous présentons les nouvelles fonctionnalités développées au cours du Sprint 3, centrées sur l'enrichissement des services proposés aux clients. Ce sprint introduit plusieurs modules importants, tels que la gestion du panier d'achat, le système de messagerie, et la gestion administrative avancée.
+
+\section{Objectif du Sprint}
+
+L'objectif principal de ce sprint est de permettre aux clients d'ajouter des services à un panier, de gérer leur panier d'achat, et de communiquer avec les autres utilisateurs via un système de messagerie. Parallèlement, les administrateurs peuvent gérer les utilisateurs et superviser l'ensemble de la plateforme.
+
+\section{Backlog du Sprint 3}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{User Story} & \textbf{Priorité} & \textbf{Estimation} \\
+\hline
+Ajouter un service au panier & Haute & 1 semaine \\
+Gérer le panier d'achat & Haute & 1 semaine \\
+Envoyer un message & Haute & 1 semaine \\
+Consulter les messages & Haute & 1 semaine \\
+Gérer les utilisateurs (Admin) & Haute & 1 semaine \\
+\hline
+\end{tabular}
+\caption{Backlog du Sprint 3}
+\end{table}
+
+\section{Raffinement des cas d'utilisation}
+
+\subsection{Cas d'utilisation : Gérer le panier d'achat}
+
+Ce cas d'utilisation permet aux clients d'ajouter des services à un panier, de consulter leur panier, de modifier les quantités, et de supprimer des articles.
+
+\subsection{Cas d'utilisation : Envoyer un message}
+
+Ce cas d'utilisation permet aux utilisateurs de communiquer entre eux via un système de messagerie en temps réel.
+
+\section{Conception du Sprint 3}
+
+La phase de conception du Sprint 3 vise à modéliser les interactions fonctionnelles liées au panier et à la messagerie.
+
+\section{Implémentation}
+
+Cette section présente les interfaces développées durant le Sprint 3.
+
+\subsection{Cas d'utilisation : Gérer le panier}
+
+Cette interface permet au client de consulter son panier, modifier les quantités, et procéder à l'achat.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/screenshots/panier.png}
+\caption{Interface de gestion du panier}
+\label{fig:panier}
+\end{figure}
+
+\subsection{Cas d'utilisation : Système de messagerie}
+
+Cette interface permet aux utilisateurs d'envoyer et de recevoir des messages.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/screenshots/messagerie.png}
+\caption{Interface de messagerie}
+\label{fig:messagerie}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{images/screenshots/messagerie_conversation.png}
+\caption{Conversation entre utilisateurs}
+\label{fig:messagerie_conv}
+\end{figure}
+
+\subsection{Cas d'utilisation : Gestion des utilisateurs (Administrateur)}
+
+Cette interface permet à l'administrateur de gérer tous les utilisateurs de la plateforme.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/screenshots/admin_utilisateurs.png}
+\caption{Interface d'administration - Gestion des utilisateurs}
+\label{fig:admin_users}
+\end{figure}
+
+\section{Conclusion}
+
+Ce Sprint 3 a permis d'implémenter plusieurs fonctionnalités clés renforçant l'autonomie des clients et l'efficacité du système : gestion du panier, système de messagerie, et gestion administrative avancée. Grâce à ces avancées, l'expérience utilisateur a été nettement améliorée.
+
+% Chapitre 6 : Sprint 4
+\chapter{Sprint 4}
+
+\section{Introduction}
+
+Dans ce chapitre, nous présentons les fonctionnalités développées pour le système de notifications et le chatbot intelligent. Ces fonctionnalités permettent aux utilisateurs de recevoir des notifications en temps réel et d'utiliser un assistant virtuel pour faciliter leur navigation.
+
+\section{Objectif du Sprint}
+
+Ce sprint a pour objectif de développer l'ensemble des fonctionnalités liées aux notifications et au chatbot. Du côté client, l'objectif est de permettre aux utilisateurs de recevoir des notifications en temps réel et d'utiliser un chatbot intelligent pour rechercher dans le catalogue et obtenir de l'aide.
+
+\section{Backlog du Sprint 4}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{User Story} & \textbf{Priorité} & \textbf{Estimation} \\
+\hline
+Recevoir des notifications & Moyenne & 1 semaine \\
+Utiliser le chatbot & Moyenne & 1 semaine \\
+Gérer les notifications (Admin) & Moyenne & 1 semaine \\
+\hline
+\end{tabular}
+\caption{Backlog du Sprint 4}
+\end{table}
+
+\section{Raffinement des cas d'utilisation}
+
+\subsection{Cas d'utilisation : Recevoir des notifications}
+
+Ce cas d'utilisation permet aux utilisateurs de recevoir des notifications en temps réel concernant les mises à jour importantes (validation de publication, nouveaux messages, etc.).
+
+\subsection{Cas d'utilisation : Utiliser le chatbot}
+
+Ce cas d'utilisation permet aux utilisateurs d'interagir avec un chatbot intelligent pour rechercher dans le catalogue, obtenir de l'aide, et répondre aux questions fréquentes.
+
+\section{Conception du Sprint 4}
+
+La phase de conception du Sprint 4 vise à modéliser les interactions fonctionnelles liées aux notifications et au chatbot.
+
+\section{Implémentation}
+
+Cette section présente les interfaces développées durant le Sprint 4.
+
+\subsection{Cas d'utilisation : Système de notifications}
+
+Cette interface permet aux utilisateurs de consulter leurs notifications.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/screenshots/notifications.png}
+\caption{Interface de notifications}
+\label{fig:notifications}
+\end{figure}
+
+\subsection{Cas d'utilisation : Chatbot intelligent}
+
+Cette interface permet aux utilisateurs d'interagir avec le chatbot pour rechercher dans le catalogue et obtenir de l'aide.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{images/screenshots/chatbot.png}
+\caption{Interface du chatbot}
+\label{fig:chatbot}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/screenshots/chatbot_recherche.png}
+\caption{Recherche dans le catalogue via le chatbot}
+\label{fig:chatbot_recherche}
+\end{figure}
+
+\subsection{Cas d'utilisation : Page d'accueil}
+
+La page d'accueil présente les services proposés et permet aux visiteurs de découvrir la plateforme.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{images/screenshots/accueil.png}
+\caption{Page d'accueil de la plateforme}
+\label{fig:accueil}
+\end{figure}
+
+\subsection{Cas d'utilisation : Profil utilisateur}
+
+Cette interface permet aux utilisateurs de consulter et modifier leur profil.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{images/screenshots/profil.png}
+\caption{Interface de gestion du profil utilisateur}
+\label{fig:profil}
+\end{figure}
+
+\section{Conclusion}
+
+Ce sprint a permis de concevoir et développer les fonctionnalités liées aux notifications et au chatbot. Les clients peuvent désormais recevoir des notifications en temps réel et utiliser un assistant virtuel pour faciliter leur navigation sur la plateforme.
+
+% Conclusion générale
+\chapter{Conclusion générale}
+
+Dans le cadre de notre projet de fin d'études, nous avons conçu et développé une application web moderne et sécurisée permettant aux utilisateurs d'accéder à plusieurs services de réparation d'électroménagers en ligne. Ce rapport présente l'ensemble des étapes de conception, de modélisation et de développement de cette plateforme, en suivant une approche agile découpée en plusieurs sprints successifs.
+
+Les fonctionnalités prévues ont été progressivement mises en œuvre, notamment : l'authentification sécurisée (JWT et Google OAuth), la gestion des publications, la consultation du catalogue, la gestion du panier d'achat, le système de messagerie, les notifications en temps réel, et le chatbot intelligent. Côté administrateur, une interface dédiée permet de suivre, traiter et valider les différentes publications et de gérer les utilisateurs.
+
+Ce projet a représenté une opportunité concrète pour mettre en pratique nos compétences en développement full-stack (Spring Boot, React, MySQL), en modélisation UML, en gestion de projet agile, ainsi qu'en sécurité des applications web. Il nous a également permis de nous confronter à des problématiques réelles telles que l'intégration des rôles utilisateurs, la gestion des flux de données, la structuration modulaire du code, la performance du système et la communication utilisateur via notifications.
+
+Néanmoins, ce travail ne constitue qu'une première version fonctionnelle du système. Plusieurs pistes d'amélioration peuvent être envisagées pour les évolutions futures, notamment :
+
+\begin{itemize}
+    \item Le développement d'une application mobile pour étendre l'accessibilité de la plateforme,
+    \item L'enrichissement du tableau de bord avec des indicateurs analytiques avancés pour les clients et les administrateurs,
+    \item L'ajout de notifications temps réel via WebSocket pour une meilleure réactivité,
+    \item L'amélioration du chatbot avec des capacités d'apprentissage automatique,
+    \item L'intégration d'un système de paiement en ligne,
+    \item L'ajout d'un système de notation et d'avis pour les réparateurs.
+\end{itemize}
+
+En conclusion, ce projet nous a permis de vivre une expérience complète de développement logiciel, en mobilisant à la fois rigueur technique, esprit d'analyse et sens de l'organisation. Il constitue une étape importante dans notre parcours d'ingénieur logiciel, en phase avec les enjeux actuels de la digitalisation des services.
+
+% Bibliographie
+\chapter*{Bibliographie}
+\addcontentsline{toc}{chapter}{Bibliographie}
+
+\begin{thebibliography}{99}
+
+\bibitem{spring-boot}
+Spring Boot Documentation. \textit{Developing with Spring Boot}. 
+\url{https://docs.spring.io/spring-boot/docs/current/reference/html/using.html}
+
+\bibitem{react}
+React Documentation. \textit{React - A JavaScript library for building user interfaces}. 
+\url{https://react.dev/}
+
+\bibitem{uml}
+Object Management Group. \textit{Unified Modeling Language (UML)}. 
+\url{https://www.omg.org/spec/UML/}
+
+\bibitem{agile}
+Agile Alliance. \textit{Agile Manifesto}. 
+\url{https://agilemanifesto.org/}
+
+\bibitem{jwt}
+JWT.io. \textit{JSON Web Token Introduction}. 
+\url{https://jwt.io/introduction}
+
+\bibitem{tailwind}
+Tailwind CSS Documentation. \textit{Tailwind CSS - A utility-first CSS framework}. 
+\url{https://tailwindcss.com/docs}
+
+\bibitem{mysql}
+MySQL Documentation. \textit{MySQL 8.0 Reference Manual}. 
+\url{https://dev.mysql.com/doc/refman/8.0/en/}
+
+\bibitem{oauth}
+OAuth 2.0. \textit{The OAuth 2.0 Authorization Framework}. 
+RFC 6749, \url{https://oauth.net/2/}
+
+\end{thebibliography}
+
+\end{document}
+

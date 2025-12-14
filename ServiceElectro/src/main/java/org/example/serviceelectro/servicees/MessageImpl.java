@@ -102,27 +102,20 @@ public class MessageImpl implements Imessage {
     }
 
     @Override
-    public void deleteMessage(Long id, Long userId) {
+    public void deleteMessage(Long id) {
         Optional<Message> messageOpt = messageRepository.findById(id);
         if (messageOpt.isEmpty()) {
             throw new IllegalArgumentException("Message non trouvé avec l'ID: " + id);
         }
         
-        Message message = messageOpt.get();
-        // Vérifier que l'utilisateur est soit l'expéditeur soit le destinataire
-        Long senderId = message.getSender() != null ? message.getSender().getId() : null;
-        Long receiverId = message.getReceiver() != null ? message.getReceiver().getId() : null;
-        
-        if (!userId.equals(senderId) && !userId.equals(receiverId)) {
-            throw new IllegalArgumentException("Vous n'êtes pas autorisé à supprimer ce message");
-        }
-        
+        // Seul l'admin peut supprimer les messages (vérifié au niveau du contrôleur avec @PreAuthorize)
         messageRepository.deleteById(id);
     }
     
-    public void deleteMessages(List<Long> messageIds, Long userId) {
+    @Override
+    public void deleteMessages(List<Long> messageIds) {
         for (Long messageId : messageIds) {
-            deleteMessage(messageId, userId);
+            deleteMessage(messageId);
         }
     }
 

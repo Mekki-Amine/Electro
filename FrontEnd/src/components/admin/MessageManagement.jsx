@@ -167,7 +167,7 @@ const MessageManagement = () => {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      await axios.delete(`/api/messages/${messageId}?userId=${adminId}`, { headers });
+      await axios.delete(`/api/messages/${messageId}`, { headers });
       await fetchConversation(selectedUserId);
     } catch (err) {
       console.error('Error deleting message:', err);
@@ -186,8 +186,7 @@ const MessageManagement = () => {
       
       await axios.delete('/api/messages/bulk', {
         data: {
-          messageIds,
-          userId: adminId
+          messageIds
         },
         headers
       });
@@ -200,6 +199,7 @@ const MessageManagement = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Empêcher la propagation de l'événement
     
     const hasContent = newMessage.trim().length > 0;
     const hasFile = selectedFile !== null;
@@ -538,7 +538,7 @@ const MessageManagement = () => {
               </div>
 
               {/* Formulaire d'envoi */}
-              <form onSubmit={handleSendMessage} className="border-t border-gray-200 pt-4">
+              <form onSubmit={handleSendMessage} noValidate className="border-t border-gray-200 pt-4">
                 {/* Prévisualisation du fichier */}
                 {filePreview && (
                   <div className="mb-2 relative inline-block">
@@ -607,6 +607,12 @@ const MessageManagement = () => {
                       type="text"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage(e);
+                        }
+                      }}
                       placeholder="Tapez votre message..."
                       className="flex-1 px-2 py-2 focus:outline-none"
                       disabled={sending}

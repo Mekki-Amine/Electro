@@ -1,0 +1,209 @@
+═══════════════════════════════════════════════════════════════════
+  DIAGRAMME DE CLASSES GLOBAL - PLATEFORME FIXER
+═══════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        Utilisateur                              │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - username: String                                              │
+│ - email: String                                                 │
+│ - password: String                                              │
+│ - role: String                                                  │
+│ - profilePhoto: String                                          │
+│ - phone: String                                                 │
+│ - address: String                                               │
+│ - emailVerified: Boolean                                        │
+│ - isOnline: Boolean                                             │
+│ - lastLogin: LocalDateTime                                      │
+│ - createdAt: LocalDateTime                                      │
+│ - updatedAt: LocalDateTime                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ + getUsername(): String                                         │
+│ + getRealUsername(): String                                     │
+│ + getAuthorities(): Collection<GrantedAuthority>                │
+│ + isAccountNonExpired(): Boolean                                │
+│ + isAccountNonLocked(): Boolean                                 │
+│ + isCredentialsNonExpired(): Boolean                            │
+│ + isEnabled(): Boolean                                          │
+└─────────────────────────────────────────────────────────────────┘
+         │ 1
+         │
+         │ *
+┌────────▼────────────────────────────────────────────────────────┐
+│                      Publication                                 │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - title: String                                                 │
+│ - description: String                                           │
+│ - type: String                                                  │
+│ - price: Double                                                 │
+│ - status: String                                                │
+│ - verified: Boolean                                             │
+│ - inCatalog: Boolean                                            │
+│ - inPublications: Boolean                                        │
+│ - verifiedBy: Long                                              │
+│ - verifiedAt: LocalDateTime                                     │
+│ - fileUrl: String                                               │
+│ - fileName: String                                              │
+│ - fileType: String                                              │
+│ - fileSize: Long                                                │
+│ - createdAt: LocalDateTime                                      │
+│ - updatedAt: LocalDateTime                                      │
+├─────────────────────────────────────────────────────────────────┤
+│ + verify(): void                                                │
+│ + unverify(): void                                              │
+└─────────────────────────────────────────────────────────────────┘
+         │ 1
+         │
+         │ *
+┌────────▼────────────────────────────────────────────────────────┐
+│                        Comment                                   │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - content: String                                               │
+│ - createdAt: LocalDateTime                                      │
+│ - updatedAt: LocalDateTime                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        Message                                   │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - content: String                                               │
+│ - isRead: Boolean                                               │
+│ - fileUrl: String                                               │
+│ - fileName: String                                              │
+│ - fileType: String                                              │
+│ - latitude: Double                                              │
+│ - longitude: Double                                             │
+│ - locationName: String                                          │
+│ - createdAt: LocalDateTime                                      │
+│ - updatedAt: LocalDateTime                                      │
+└─────────────────────────────────────────────────────────────────┘
+         ▲ 1                    ▲ 1
+         │                      │
+         │ *                    │ *
+         │                      │
+┌────────┴──────────────────────┴─────────────────────────────────┐
+│                        Utilisateur                              │
+│              (sender)          (receiver)                        │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      Notification                               │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - message: String                                               │
+│ - type: String                                                  │
+│ - isRead: Boolean                                               │
+│ - createdAt: LocalDateTime                                      │
+└─────────────────────────────────────────────────────────────────┘
+         ▲ 1
+         │
+         │ *
+┌────────┴────────────────────────────────────────────────────────┐
+│                        Utilisateur                              │
+│                          (user)                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                          Cart                                   │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - createdAt: LocalDateTime                                      │
+│ - updatedAt: LocalDateTime                                      │
+└─────────────────────────────────────────────────────────────────┘
+         ▲ 1                    │ 1
+         │                      │
+         │ 1                    │ *
+         │                      │
+┌────────┴──────────────────────▼─────────────────────────────────┐
+│                        Utilisateur          CartItem            │
+│                          (user)                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                       CartItem                                   │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - quantity: Integer                                             │
+│ - createdAt: LocalDateTime                                      │
+│ - updatedAt: LocalDateTime                                      │
+└─────────────────────────────────────────────────────────────────┘
+         ▲ 1                    ▲ 1
+         │                      │
+         │ *                    │ *
+         │                      │
+┌────────┴──────────────────────┴─────────────────────────────────┐
+│                          Cart          Publication              │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     Recommendation                               │
+├─────────────────────────────────────────────────────────────────┤
+│ - id: Long                                                      │
+│ - name: String                                                  │
+│ - email: String                                                 │
+│ - phone: String                                                 │
+│ - message: String                                               │
+│ - createdAt: LocalDateTime                                      │
+│ - updatedAt: LocalDateTime                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════
+  RELATIONS DÉTAILLÉES
+═══════════════════════════════════════════════════════════════════
+
+1. Utilisateur (1) ──<possède>── (*) Publication
+   - Un utilisateur peut avoir plusieurs publications
+   - Une publication appartient à un seul utilisateur
+
+2. Utilisateur (1) ──<écrit>── (*) Comment
+   - Un utilisateur peut écrire plusieurs commentaires
+   - Un commentaire est écrit par un seul utilisateur
+
+3. Publication (1) ──<a>── (*) Comment
+   - Une publication peut avoir plusieurs commentaires
+   - Un commentaire appartient à une seule publication
+
+4. Utilisateur (1) ──<envoie>── (*) Message [sender]
+   - Un utilisateur peut envoyer plusieurs messages
+   - Un message est envoyé par un seul utilisateur
+
+5. Utilisateur (1) ──<reçoit>── (*) Message [receiver]
+   - Un utilisateur peut recevoir plusieurs messages
+   - Un message est reçu par un seul utilisateur
+
+6. Utilisateur (1) ──<reçoit>── (*) Notification
+   - Un utilisateur peut recevoir plusieurs notifications
+   - Une notification est destinée à un seul utilisateur
+
+7. Utilisateur (1) ──<possède>── (1) Cart
+   - Un utilisateur a un seul panier
+   - Un panier appartient à un seul utilisateur
+
+8. Cart (1) ──<contient>── (*) CartItem
+   - Un panier contient plusieurs articles
+   - Un article appartient à un seul panier
+
+9. Publication (1) ──<est dans>── (*) CartItem
+   - Une publication peut être dans plusieurs paniers
+   - Un article du panier correspond à une seule publication
+
+10. Notification (*) ──<réfère à>── (0..1) Publication
+    - Une notification peut référencer une publication (optionnel)
+    - Une publication peut avoir plusieurs notifications
+
+═══════════════════════════════════════════════════════════════════
+  NOTES IMPORTANTES
+═══════════════════════════════════════════════════════════════════
+
+- Utilisateur implémente UserDetails (Spring Security)
+- Toutes les entités implémentent Serializable
+- Toutes les entités ont createdAt et updatedAt (audit automatique)
+- Les relations sont bidirectionnelles (mappedBy)
+- Utilisation de Lombok pour les getters/setters
+- CascadeType.ALL pour les relations parent-enfant
+
+

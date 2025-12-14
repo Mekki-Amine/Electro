@@ -1,0 +1,123 @@
+@startuml
+' Diagramme de classes (aligné sur les entités JPA ServiceElectro)
+
+skinparam dpi 300
+skinparam backgroundColor transparent
+skinparam classAttributeIconSize 0
+
+hide circle
+
+title Diagramme de Classes - Plateforme Fixer
+
+class Utilisateur {
+  - Long id
+  - String username
+  - String password
+  - String email
+  - String role
+  - Boolean emailVerified
+  - String profilePhoto
+  - String phone
+  - String address
+  - Boolean isOnline
+  - LocalDateTime lastLogin
+  - LocalDateTime createdAt
+  - LocalDateTime updatedAt
+
+  + String getUsername()
+  + String getRealUsername()
+  + Collection<? extends GrantedAuthority> getAuthorities()
+  + boolean isAccountNonExpired()
+  + boolean isAccountNonLocked()
+  + boolean isCredentialsNonExpired()
+  + boolean isEnabled()
+}
+
+class Publication {
+  - Long id
+  - String title
+  - String description
+  - String type
+  - Double price
+  - String status
+  - Boolean verified
+  - Boolean inCatalog
+  - Boolean inPublications
+  - Long verifiedBy
+  - LocalDateTime verifiedAt
+  - String fileUrl
+  - String fileName
+  - String fileType
+  - Long fileSize
+  - LocalDateTime createdAt
+  - LocalDateTime updatedAt
+
+  + void verify()
+  + void unverify()
+}
+
+class Comment {
+  - Long id
+  - String content
+  - LocalDateTime createdAt
+  - LocalDateTime updatedAt
+}
+
+class Message {
+  - Long id
+  - String content
+  - Boolean isRead
+  - String fileUrl
+  - String fileName
+  - String fileType
+  - Double latitude
+  - Double longitude
+  - String locationName
+  - LocalDateTime createdAt
+  - LocalDateTime updatedAt
+}
+
+class Notification {
+  - Long id
+  - String message
+  - Boolean isRead
+  - String type
+  - LocalDateTime createdAt
+}
+
+class Cart {
+  - Long id
+  - LocalDateTime createdAt
+  - LocalDateTime updatedAt
+}
+
+class CartItem {
+  - Long id
+  - Integer quantity
+  - LocalDateTime createdAt
+}
+
+class Recommendation {
+  - Long id
+  - Integer rating
+  - LocalDateTime createdAt
+}
+
+' Relations (cardinalités basées sur les annotations JPA)
+Utilisateur "1" <-- "0..*" Publication : publie
+Publication "1" --> "0..*" Comment : a
+Utilisateur "1" <-- "0..*" Comment : écrit
+
+Message "0..*" --> "1" Utilisateur : sender
+Message "0..*" --> "1" Utilisateur : receiver
+
+Notification "0..*" --> "1" Utilisateur : user
+Notification "0..*" --> "0..1" Publication : publication
+
+Cart "0..1" --> "1" Utilisateur : appartient
+Cart "1" --> "0..*" CartItem : contient
+CartItem "0..*" --> "1" Publication : publication
+
+Recommendation "0..*" --> "1" Utilisateur : user
+
+@enduml
